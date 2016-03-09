@@ -3,7 +3,7 @@
 #include <Accel.h>
 
 
-#define ACCEL_INTERVAL_MS 200
+#define ACCEL_INTERVAL_MS 30
 
 // Define some NeoPatterns for the two rings and the stick
 //  as well as some completion routines
@@ -45,8 +45,8 @@ void loop()
     Single.Update();    
 	  accel.Update();
 
-   //if (accel.isDancing())
-        if (digitalRead(9) == LOW)
+    if (accel.isDancing())
+        //if (digitalRead(9) == LOW)
     {
       Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
