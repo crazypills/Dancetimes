@@ -33,6 +33,13 @@ Accel::Update()
       Serial.print("Y: "); Serial.print((int)_lsm.magData.y);         Serial.print(" ");
       Serial.print("Z: "); Serial.println((int)_lsm.magData.z);       Serial.print(" ");
 
+      float x = _lsm.accelData.x;
+      float y = _lsm.accelData.y;
+      float z = _lsm.accelData.z;
+      float currentAbsAccel = abs(sqrt(x*x + y*y + z*z) - 1000.0);
+      _avgAbsAccel = (_avgAbsAccel * 99.0 + currentAbsAccel)/100.0;
+      _isDancing = _avgAbsAccel > 100.0;
+
       //CompassReading will be a number between 0-255, normalized from serial inputs
       float heading = atan2(_lsm.magData.y, _lsm.magData.x);
       // Correct for when signs are reversed.

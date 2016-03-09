@@ -13,6 +13,7 @@ protected:
 		float _accelreadingX;
 		float _accelreadingY;
 		float _accelreadingZ;
+		float _avgAbsAccel;
 		bool _isDancing;
 		
 	public:
