@@ -57,8 +57,23 @@ Accel::Update()
       //float headingDegrees = heading * 180/M_PI * (256/360); 
 	  heading = ((heading * 180 * 256 ) / 360) / 3.141567;
 	  Serial.print("heading256: "); Serial.println(heading);       Serial.print(" ");
+
+      // We adjust the heading before taking the moving average to handle the 360 -> 0 jump
+      if (heading > _compassAvg + 180) {
+          heading -= 360;
+      } else if (heading < _compassAvg - 180) {
+          heading += 360;
+      }
+
+      _compassAvg = (_compassAvg * 99.0 + heading) / 100.0;
+      if (_compassAvg < 0) {
+          _compassAvg += 360;
+      } else if (_compassAvg >= 360) {
+          _compassAvg -= 360;
+      }
+
       //Convert float to int
-      _compassReading = (int)heading;
+      _compassReading = (int)_compassAvg;
 
 //      //read the direction, and see if the threshold is in a state for the transition function
 //      if ( ( DirectionalThreshold != true ) && ( ( compassReading % 64) < 1 || ( ( compassReading % 64 ) > 62 ) ) )
