@@ -46,7 +46,28 @@ void loop()
 	  accel.Update();
 
    //if (accel.isDancing())
-    
+        if (digitalRead(9) == LOW)
+    {
+      Single.ColorSet(Single.Wheel(random(255)));
+      //Stick.ColorSet(Stick.Color(255, 0, 0));
+      Stick.Interval = 200;
+      Stick.Update();
+    }
+    // Update the rings.
+    //Single.ActivePattern = RAINBOW_CYCLE;
+    else if (digitalRead(10) == LOW)
+    {
+      Single.ColorSet(Single.Color(0,255,255));
+      Stick.Interval = 50;
+      Stick.Update();
+    }
+    else
+    { 
+      Single.Update();
+      Stick.Interval = 20;
+      Stick.Update();
+    }
+    /*
     // Switch patterns on a button press:
     if (digitalRead(8) == LOW) // Button #1 pressed
     {
@@ -95,6 +116,7 @@ void loop()
     {
         Stick.Update();
     }    
+    */
 }
 
 //------------------------------------------------------------
