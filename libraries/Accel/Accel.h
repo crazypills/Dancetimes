@@ -10,12 +10,17 @@ protected:
 		uint32_t _lastUpdateMS;
 		uint32_t _intervalMS;
 		uint16_t _compassReading;
+		float _accelreadingX;
+		float _accelreadingY;
+		float _accelreadingZ;
+		bool _isDancing;
 		
 	public:
 		Accel(uint32_t intervalMS);
 		bool begin();		// Convention for this funciton is lower case...not sure why
 		void Update();
 		uint16_t GetCompassReading();
+		bool isDancing();
 };
 
 #endif // ACCEL_H

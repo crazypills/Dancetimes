@@ -10,7 +10,7 @@
 void StickComplete();
 void SingleComplete();
 
-Accel Accel(ACCEL_INTERVAL_MS);
+Accel accel(ACCEL_INTERVAL_MS);
 NeoPatterns Stick(20, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 
@@ -30,7 +30,7 @@ void setup()
    Stick.begin();
     Single.begin();
     Single.ActivePattern = RAINBOW_CYCLE;
-	Accel.begin();
+	accel.begin();
     
     //setup the stick with red
     Stick.Scanner(Stick.Color(255,0,0), 55);
@@ -43,7 +43,9 @@ void loop()
     
     // Update the rings.
     Single.Update();    
-	  Accel.Update();
+	  accel.Update();
+
+   //if (accel.isDancing())
     
     // Switch patterns on a button press:
     if (digitalRead(8) == LOW) // Button #1 pressed

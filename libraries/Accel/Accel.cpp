@@ -46,9 +46,11 @@ Accel::Update()
         heading -= 2*PI;
       }
       // Convert radians to 256 scale for readability.
-      float headingDegrees = heading * 180/M_PI * (256/360); 
+      //float headingDegrees = heading * 180/M_PI * (256/360); 
+	  heading = ((heading * 180 * 256 ) / 360) / 3.141567;
+	  Serial.print("heading256: "); Serial.println(heading);       Serial.print(" ");
       //Convert float to int
-      _compassReading = (int)headingDegrees;
+      _compassReading = (int)heading;
 
 //      //read the direction, and see if the threshold is in a state for the transition function
 //      if ( ( DirectionalThreshold != true ) && ( ( compassReading % 64) < 1 || ( ( compassReading % 64 ) > 62 ) ) )
@@ -65,4 +67,9 @@ Accel::Update()
 uint16_t Accel::GetCompassReading()
 {
 	return _compassReading;
+}
+
+bool Accel::isDancing()
+{
+	return _isDancing;
 }
