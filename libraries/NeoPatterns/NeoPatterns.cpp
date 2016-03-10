@@ -32,6 +32,15 @@ void NeoPatterns::Update()
       case COMPASS:
         CompassUpdate();
         break;
+		case DOUBLESCANNER:
+		DoubleScannerUpdate();
+		break;
+		case FOLLOWER:
+		FollowerUpdate();
+		break;
+		case HALFUPDOWN:
+		HalfUpDownUpdate();
+		break;
       default:
         break;
     }
@@ -193,6 +202,94 @@ NeoPatterns::ScannerUpdate()
   Increment();
 }
 
+// Initialize for a SCANNNER
+void
+NeoPatterns::DoubleScanner(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers)
+{
+  ActivePattern = DOUBLESCANNER;
+  Interval = interval;
+  TotalSteps = numPixels();
+  Color1 = color1;
+  Width = width;
+  Followers = followers;
+  Index = 0;
+}
+
+// Update the Scanner Pattern
+void
+NeoPatterns::DoubleScannerUpdate()
+{
+  for (int i = 0; i < numPixels(); i++)
+  {
+    if (i == Index)  // Scan Pixel to the right
+    {
+      setPixelColor(i, Color1);
+    }
+    else if (i == TotalSteps - Index) // Scan Pixel to the left
+    {
+      setPixelColor(i, Color1);
+    }
+    else // Fading tail
+    {
+      setPixelColor(i, DimColor(getPixelColor(i)));
+    }
+  }
+  show();
+  Increment();
+}
+void
+NeoPatterns::Follower(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers)
+{
+  ActivePattern = FOLLOWER;
+  Interval = interval;
+  TotalSteps = numPixels()*2;
+  Color1 = color1;
+  Width = width;
+  Followers = followers;
+  Index = 0;
+}
+
+// Update the Scanner Pattern
+void
+NeoPatterns::FollowerUpdate()
+{
+  
+  for (int i = 0; i < numPixels(); i++)
+  {
+	  for (int z=0; z < Width; z++)
+	  {
+		  if (i == Index)  // Scan Pixel to the right
+		  {
+		  	for (int j = 0; j < Followers; j++)
+		  	{
+				if (i + ((TotalSteps / Followers) * j) >= TotalSteps)
+				{
+			  	  setPixelColor(i + ((TotalSteps / Followers) * j) - TotalSteps , Color1);
+				}
+				else
+				{
+	 			  setPixelColor(i + ((TotalSteps / Followers) * j) , Color1);
+	  			}
+  	  		}	
+		  }
+	
+    /*
+	else if (i == TotalSteps - Index) // Scan Pixel to the left
+    {
+      setPixelColor(i, Color1);
+    }
+	*/
+    	  else // Fading tail
+    	  {
+	  
+	  		setPixelColor(i, DimColor(getPixelColor(i)));
+    	  }
+  		}
+	}
+  show();
+  Increment();
+}
+
 // Initialize for a Fade
 void
 NeoPatterns::Fade(uint32_t color1, uint32_t color2, uint16_t steps, uint8_t interval, direction dir)
@@ -217,6 +314,40 @@ NeoPatterns::FadeUpdate()
   uint8_t blue = ((Blue(Color1) * (TotalSteps - Index)) + (Blue(Color2) * Index)) / TotalSteps;
 
   ColorSet(Color(red, green, blue));
+  show();
+  Increment();
+}
+
+// Initialize for a SCANNNER
+void
+NeoPatterns::HalfUpDown(uint32_t color1, uint8_t interval)
+{
+  ActivePattern = SCANNER;
+  Interval = interval;
+  TotalSteps = (numPixels() - 1) * 2;
+  Color1 = color1;
+  Index = 0;
+}
+
+// Update the Scanner Pattern
+void
+NeoPatterns::HalfUpDownUpdate()
+{
+  for (int i = 0; i < numPixels(); i++)
+  {
+    if (i == Index)  // Scan Pixel to the right
+    {
+      setPixelColor(i, Color1);
+    }
+    else if (i == TotalSteps - Index) // Scan Pixel to the left
+    {
+      setPixelColor(i, Color1);
+    }
+    else // Fading tail
+    {
+      setPixelColor(i, DimColor(getPixelColor(i)));
+    }
+  }
   show();
   Increment();
 }

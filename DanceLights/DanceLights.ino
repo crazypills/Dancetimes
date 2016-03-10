@@ -11,7 +11,7 @@ void StickComplete();
 void SingleComplete();
 
 Accel accel(ACCEL_INTERVAL_MS);
-NeoPatterns Stick(20, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
+NeoPatterns Stick(30, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 
 bool DirectionalThreshold;  //whether the compass threshold can be used
@@ -46,25 +46,43 @@ void loop()
 	  accel.Update();
 
     if (accel.isDancing())
-        //if (digitalRead(9) == LOW)
     {
       Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
-      Stick.Interval = 200;
+      if(Stick.ActivePattern != FOLLOWER)
+      {
+        Stick.Follower(Stick.Color(0,255,0),40,2,2);
+      }
+    
+      Stick.Update();
+    }
+    else if (digitalRead(9) == LOW)
+    {
+      if(Stick.ActivePattern != FOLLOWER)
+      {
+        Stick.Follower(Stick.Color(255,0,255),80,5,5);
+      }
       Stick.Update();
     }
     // Update the rings.
     //Single.ActivePattern = RAINBOW_CYCLE;
     else if (digitalRead(10) == LOW)
     {
-      Single.ColorSet(Single.Color(0,255,255));
-      Stick.Interval = 50;
+      if(Stick.ActivePattern != FOLLOWER)
+      {
+        Stick.Follower(Stick.Color(0,255,255),40,4,3);
+      }
+    
       Stick.Update();
     }
     else
     { 
       Single.Update();
-      Stick.Interval = 20;
+      if(Stick.ActivePattern != SCANNER)
+      {
+        Stick.Scanner(Stick.Color(0,255,0),100);
+      }
+    //Stick.Interval = 20;
       Stick.Update();
     }
     /*
