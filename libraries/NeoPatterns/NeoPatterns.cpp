@@ -11,6 +11,7 @@ void NeoPatterns::Update()
 {
   if ((millis() - lastUpdate) > Interval) // time to update
   {
+	
     lastUpdate = millis();
     switch (ActivePattern)
     {
