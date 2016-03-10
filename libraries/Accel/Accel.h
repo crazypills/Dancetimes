@@ -8,6 +8,7 @@ class Accel
 protected:
 		Adafruit_LSM303 _lsm;
 		uint32_t _lastUpdateMS;
+		uint32_t _lastCompassMS;
 		uint32_t _intervalMS;
 		uint16_t _compassReading;
 		float _accelreadingX;
@@ -22,6 +23,7 @@ protected:
 		void Update();
 		uint16_t GetCompassReading();
 		bool isDancing();
+		bool directionalThreshold();
 };
 
 #endif // ACCEL_H

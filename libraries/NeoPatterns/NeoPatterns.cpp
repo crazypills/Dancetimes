@@ -32,7 +32,10 @@ void NeoPatterns::Update()
       case COMPASS:
         CompassUpdate();
         break;
-      default:
+	  case DOUBLESCANNER:
+		DoubleScannerUpdate();
+      	break;
+	  default:
         break;
     }
   }
@@ -173,6 +176,41 @@ NeoPatterns::Scanner(uint32_t color1, uint8_t interval)
 // Update the Scanner Pattern
 void
 NeoPatterns::ScannerUpdate()
+{
+  for (int i = 0; i < numPixels(); i++)
+  {
+    if (i == Index)  // Scan Pixel to the right
+    {
+      setPixelColor(i, Color1);
+    }
+    else if (i == TotalSteps - Index) // Scan Pixel to the left
+    {
+      setPixelColor(i, Color1);
+    }
+    else // Fading tail
+    {
+      setPixelColor(i, DimColor(getPixelColor(i)));
+    }
+  }
+  show();
+  Increment();
+}
+// Initialize for a SCANNNER
+void
+NeoPatterns::DoubleScanner(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers)
+{
+  ActivePattern = SCANNER;
+  Interval = interval;
+  TotalSteps = numPixels();
+  Color1 = color1;
+  Width = width;
+  Followers = followers;
+  Index = 0;
+}
+
+// Update the Scanner Pattern
+void
+NeoPatterns::DoubleScannerUpdate()
 {
   for (int i = 0; i < numPixels(); i++)
   {

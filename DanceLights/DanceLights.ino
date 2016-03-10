@@ -28,12 +28,12 @@ void setup()
     
     // Initialize all the pixelStrips
    Stick.begin();
-    Single.begin();
-    Single.ActivePattern = RAINBOW_CYCLE;
+   Single.begin();
+    //Single.ActivePattern = RAINBOW_CYCLE;
 	accel.begin();
     
     //setup the stick with red
-    Stick.Scanner(Stick.Color(255,0,0), 55);
+    Stick.DoubleScanner(Stick.Color(255,0,0), 200, 1 , 2);
 }
 
 // Main loop
@@ -50,7 +50,7 @@ void loop()
     {
       Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
-      Stick.Interval = 200;
+      Stick.Interval = 5;
       Stick.Update();
     }
     // Update the rings.
@@ -63,7 +63,8 @@ void loop()
     }
     else
     { 
-      Single.Update();
+      Single.ColorSet(Single.Wheel(accel.GetCompassReading()));
+      //Serial.print("Compass Reading: "); Serial.println(accel.GetCompassReading());       Serial.print(" ");
       Stick.Interval = 20;
       Stick.Update();
     }
