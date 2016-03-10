@@ -32,7 +32,6 @@ void NeoPatterns::Update()
       case COMPASS:
         CompassUpdate();
         break;
-<<<<<<< HEAD
 		case DOUBLESCANNER:
 		DoubleScannerUpdate();
 		break;
@@ -43,15 +42,6 @@ void NeoPatterns::Update()
 		HalfUpDownUpdate();
 		break;
       default:
-=======
-	  case DOUBLESCANNER:
-		DoubleScannerUpdate();
-      	break;
-	  case FOLLOWER:
-	  	FollowerUpdate();
-	  	break;
-	  default:
->>>>>>> origin/carrino
         break;
     }
   }
