@@ -4,7 +4,7 @@
 #include <Adafruit_NeoPixel.h>
 
 // Pattern types supported:
-enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE , COMPASS, DOUBLESCANNER};
+enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE , COMPASS, DOUBLESCANNER, FOLLOWER};
 // Patern directions supported:
 enum  direction { FORWARD, REVERSE };
 
@@ -66,6 +66,10 @@ class NeoPatterns : public Adafruit_NeoPixel
     void FadeUpdate();
 	void DoubleScanner(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers);
 	void DoubleScannerUpdate();
+	void Follower(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers);
+	void FollowerUpdate();
+	
+	
     // Initialize for a Compass Function
 	void Compass(uint16_t compassReading, uint16_t steps);
     void SetCompassReading( uint16_t compassReading);

@@ -11,7 +11,7 @@ void StickComplete();
 void SingleComplete();
 
 Accel accel(ACCEL_INTERVAL_MS);
-NeoPatterns Stick(20, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
+NeoPatterns Stick(30, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 
 bool DirectionalThreshold;  //whether the compass threshold can be used
@@ -33,7 +33,7 @@ void setup()
 	accel.begin();
     
     //setup the stick with red
-    Stick.DoubleScanner(Stick.Color(255,0,0), 200, 1 , 2);
+    Stick.Scanner(Stick.Color(255,0,0), 200);
 }
 
 // Main loop
@@ -50,7 +50,11 @@ void loop()
     {
       Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
-      Stick.Interval = 5;
+      if (Stick.ActivePattern != FOLLOWER)
+      {
+        Stick.Follower(Stick.Color(0,255,0), 50, 1, 4);
+      }
+      Stick.Interval = 50;
       Stick.Update();
     }
     // Update the rings.
@@ -58,14 +62,20 @@ void loop()
     else if (digitalRead(10) == LOW)
     {
       Single.ColorSet(Single.Color(0,255,255));
-      Stick.Interval = 50;
+      if (Stick.ActivePattern != FOLLOWER)
+      {
+        Stick.Follower(Stick.Color(255,0,0), 100, 3, 2);
+      }
       Stick.Update();
     }
     else
     { 
       Single.ColorSet(Single.Wheel(accel.GetCompassReading()));
       //Serial.print("Compass Reading: "); Serial.println(accel.GetCompassReading());       Serial.print(" ");
-      Stick.Interval = 20;
+      if(Stick.ActivePattern != THEATER_CHASE)
+      {
+        Stick.TheaterChase(Stick.Color(255,0,0),Stick.Color(0,0,255), 500, FORWARD);
+      }
       Stick.Update();
     }
     /*
