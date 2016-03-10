@@ -60,39 +60,33 @@ Accel::Update()
       }
 	  Serial.print("heading: "); Serial.println(heading);       Serial.print(" ");
       // Check for wrap due to addition of declination.
-      //if (heading > 2*PI)
-      //{
-      //  heading -= 2*PI;
-      //}
+      if (heading >= 2*PI)
+      {
+        heading -= 2*PI;
+      }
       // Convert radians to 256 scale for readability.
       //float headingDegrees = heading * 180/M_PI * (256/360); 
-	  heading = (heading * 40.74368);
-	  Serial.print("heading256: "); Serial.println(heading);       Serial.print(" ");
-      //Convert float to int
-      
-	  currentCompass = ((heading * (COMPASS_AVERAGE_INTERVALS-1) + heading))/COMPASS_AVERAGE_INTERVALS;
-	  Serial.print("currentCompass: "); Serial.println(currentCompass);       Serial.print(" ");
-	  
-	  
-	  //_compassReading = (int)currentCompass;
-	  
+	  //heading = ((heading * 180 * 256 ) / 360) / 3.141567;
+      heading = heading * 180 / PI;
+      Serial.print("headingdegrees: "); Serial.println(heading);       Serial.print(" ");
 
-//      //read the direction, and see if the threshold is in a state for the transition function
-//      if ( ( DirectionalThreshold != true ) && ( ( compassReading % 64) < 1 || ( ( compassReading % 64 ) > 62 ) ) )
-//         {
-//            DirectionalThreshold = true;
-//         }
-//      else if ( ( DirectionalThreshold == true) && ( ( compassReading % 64 ) > 1 && ( ( compassReading % 64 ) < 62 ) ) ) 
-//         {
-//            DirectionalThreshold = false;
-//         }
+      // We adjust the heading before taking the moving average to handle the 360 -> 0 jump
+      if (heading > _compassAvg + 180) {
+          heading -= 360;
+      } else if (heading < _compassAvg - 180) {
+          heading += 360;
+      }
+
+      _compassAvg = (_compassAvg * 99.0 + heading) / 100.0;
+      if (_compassAvg < 0) {
+          _compassAvg += 360;
+      } else if (_compassAvg >= 360) {
+          _compassAvg -= 360;
+      }
+
+      //Convert float to int
+      _compassReading = (int)_compassAvg;
     }
-    else if ( millis() - _lastCompassMS > COMPASS_SAMPLE) 
-    {
-		_lastCompassMS = millis();
-		_compassReading = (int)currentCompass;
-		Serial.print("Compass Out: "); Serial.println(_compassReading);       Serial.print(" ");
-	}
 }
 
 uint16_t Accel::GetCompassReading()

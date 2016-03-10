@@ -10,6 +10,7 @@ protected:
 		uint32_t _lastUpdateMS;
 		uint32_t _lastCompassMS;
 		uint32_t _intervalMS;
+		float _compassAvg;
 		uint16_t _compassReading;
 		float _accelreadingX;
 		float _accelreadingY;
