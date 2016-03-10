@@ -242,7 +242,7 @@ NeoPatterns::Follower(uint32_t color1, uint8_t interval, uint8_t width, uint8_t 
 {
   ActivePattern = FOLLOWER;
   Interval = interval;
-  TotalSteps = numPixels()*2;
+  TotalSteps = numPixels();
   Color1 = color1;
   Width = width;
   Followers = followers;
@@ -256,11 +256,9 @@ NeoPatterns::FollowerUpdate()
   
   for (int i = 0; i < numPixels(); i++)
   {
-	  for (int z=0; z < Width; z++)
+	  if (i == Index)  // Scan Pixel to the right
 	  {
-		  if (i == Index)  // Scan Pixel to the right
-		  {
-		  	for (int j = 0; j < Followers; j++)
+	    	for (int j = 0; j < Followers; j++)
 		  	{
 				if (i + ((TotalSteps / Followers) * j) >= TotalSteps)
 				{
@@ -270,8 +268,8 @@ NeoPatterns::FollowerUpdate()
 				{
 	 			  setPixelColor(i + ((TotalSteps / Followers) * j) , Color1);
 	  			}
-  	  		}	
-		  }
+  	  		 }	
+	   }
 	
     /*
 	else if (i == TotalSteps - Index) // Scan Pixel to the left
@@ -279,12 +277,12 @@ NeoPatterns::FollowerUpdate()
       setPixelColor(i, Color1);
     }
 	*/
-    	  else // Fading tail
+   	  else // Fading tail
     	  {
 	  
 	  		setPixelColor(i, DimColor(getPixelColor(i)));
     	  }
-  		}
+ 		
 	}
   show();
   Increment();
@@ -322,9 +320,9 @@ NeoPatterns::FadeUpdate()
 void
 NeoPatterns::HalfUpDown(uint32_t color1, uint8_t interval)
 {
-  ActivePattern = SCANNER;
+  ActivePattern = HALFUPDOWN;
   Interval = interval;
-  TotalSteps = (numPixels() - 1) * 2;
+  TotalSteps = (numPixels() / 2) + 1;
   Color1 = color1;
   Index = 0;
 }
@@ -338,15 +336,9 @@ NeoPatterns::HalfUpDownUpdate()
     if (i == Index)  // Scan Pixel to the right
     {
       setPixelColor(i, Color1);
+	  setPixelColor(numPixels()-i, Color1);
     }
-    else if (i == TotalSteps - Index) // Scan Pixel to the left
-    {
-      setPixelColor(i, Color1);
-    }
-    else // Fading tail
-    {
-      setPixelColor(i, DimColor(getPixelColor(i)));
-    }
+    
   }
   show();
   Increment();

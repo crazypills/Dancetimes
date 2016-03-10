@@ -3,7 +3,7 @@
 #include <Accel.h>
 
 
-#define ACCEL_INTERVAL_MS 30
+#define ACCEL_INTERVAL_MS 100
 
 // Define some NeoPatterns for the two rings and the stick
 //  as well as some completion routines
@@ -60,7 +60,7 @@ void loop()
     {
       if(Stick.ActivePattern != FOLLOWER)
       {
-        Stick.Follower(Stick.Color(255,0,255),80,5,5);
+        Stick.Follower(Stick.Color(255,0,255),200,1,5);
       }
       Stick.Update();
     }
@@ -68,9 +68,9 @@ void loop()
     //Single.ActivePattern = RAINBOW_CYCLE;
     else if (digitalRead(10) == LOW)
     {
-      if(Stick.ActivePattern != FOLLOWER)
+      if(Stick.ActivePattern != HALFUPDOWN)
       {
-        Stick.Follower(Stick.Color(0,255,255),40,4,3);
+        Stick.HalfUpDown(Stick.Color(0,255,255),2000);
       }
     
       Stick.Update();
@@ -80,7 +80,7 @@ void loop()
       Single.Update();
       if(Stick.ActivePattern != SCANNER)
       {
-        Stick.Scanner(Stick.Color(0,255,0),100);
+        Stick.Scanner(Stick.Color(0,255,0),70);
       }
     //Stick.Interval = 20;
       Stick.Update();
