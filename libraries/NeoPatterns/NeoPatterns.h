@@ -34,8 +34,6 @@ class NeoPatterns : public Adafruit_NeoPixel
 	uint8_t Width;  //how wide the follower pattern is
 	uint8_t Followers;  //how many followers are in each pass
     uint16_t CompassReading;  //reading from the compass function
-	uint8_t Width;
-	uint8_t Followers;
 	
     
     void (*OnComplete)();  // Callback on completion of pattern

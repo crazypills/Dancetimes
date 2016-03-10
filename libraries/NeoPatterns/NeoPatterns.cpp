@@ -201,41 +201,6 @@ NeoPatterns::ScannerUpdate()
   show();
   Increment();
 }
-// Initialize for a SCANNNER
-void
-NeoPatterns::DoubleScanner(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers)
-{
-  ActivePattern = DOUBLESCANNER;
-  Interval = interval;
-  TotalSteps = numPixels();
-  Color1 = color1;
-  Width = width;
-  Followers = followers;
-  Index = 0;
-}
-
-// Update the Scanner Pattern
-void
-NeoPatterns::DoubleScannerUpdate()
-{
-  for (int i = 0; i < numPixels(); i++)
-  {
-    if (i == Index)  // Scan Pixel to the right
-    {
-      setPixelColor(i, Color1);
-    }
-    else if (i == TotalSteps - Index) // Scan Pixel to the left
-    {
-      setPixelColor(i, Color1);
-    }
-    else // Fading tail
-    {
-      setPixelColor(i, DimColor(getPixelColor(i)));
-    }
-  }
-  show();
-  Increment();
-}
 void
 NeoPatterns::Follower(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers)
 {
@@ -246,40 +211,6 @@ NeoPatterns::Follower(uint32_t color1, uint8_t interval, uint8_t width, uint8_t 
   Width = width;
   Followers = followers;
   Index = 0;
-}
-
-// Update the Scanner Pattern
-void
-NeoPatterns::FollowerUpdate()
-{
-  
-  for (int i = 0; i < numPixels() - 1 + Width; i++)
-  {
-    if (i == Index)  // Scan Pixel to the right
-    {
-	  for (int j = 0; j < Followers; j++)
-	  {
-	  	if (i + ((TotalSteps / Followers) * j) >= TotalSteps)
-	  	{
-		  setPixelColor(i + ((TotalSteps / Followers) * j) - TotalSteps , Color1);
-	  	}
-	  else
-	  setPixelColor(i + ((TotalSteps / Followers) * j) , Color1);
-  	  }	
-	}
-    /*
-	else if (i == TotalSteps - Index) // Scan Pixel to the left
-    {
-      setPixelColor(i, Color1);
-    }
-	*/
-    else // Fading tail
-    {
-      setPixelColor(i, DimColor(getPixelColor(i)));
-    }
-  }
-  show();
-  Increment();
 }
 
 // Initialize for a SCANNNER
@@ -316,17 +247,6 @@ NeoPatterns::DoubleScannerUpdate()
   }
   show();
   Increment();
-}
-void
-NeoPatterns::Follower(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers)
-{
-  ActivePattern = FOLLOWER;
-  Interval = interval;
-  TotalSteps = numPixels();
-  Color1 = color1;
-  Width = width;
-  Followers = followers;
-  Index = 0;
 }
 
 // Update the Scanner Pattern
