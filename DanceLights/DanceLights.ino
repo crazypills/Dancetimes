@@ -28,12 +28,12 @@ void setup()
     
     // Initialize all the pixelStrips
    Stick.begin();
-    Single.begin();
-    Single.ActivePattern = RAINBOW_CYCLE;
+   Single.begin();
+    //Single.ActivePattern = RAINBOW_CYCLE;
 	accel.begin();
     
     //setup the stick with red
-    Stick.Scanner(Stick.Color(255,0,0), 55);
+    Stick.Scanner(Stick.Color(255,0,0), 200);
 }
 
 // Main loop
@@ -49,6 +49,7 @@ void loop()
     {
       Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
+<<<<<<< HEAD
       if(Stick.ActivePattern != FOLLOWER)
       {
         Stick.Follower(Stick.Color(0,255,0),40,2,2);
@@ -62,27 +63,51 @@ void loop()
       {
         Stick.Follower(Stick.Color(255,0,255),200,1,5);
       }
+=======
+      if (Stick.ActivePattern != FOLLOWER)
+      {
+        Stick.Follower(Stick.Color(0,255,0), 50, 1, 4);
+      }
+      Stick.Interval = 50;
+>>>>>>> origin/carrino
       Stick.Update();
     }
     // Update the rings.
     //Single.ActivePattern = RAINBOW_CYCLE;
     else if (digitalRead(10) == LOW)
     {
+<<<<<<< HEAD
       if(Stick.ActivePattern != HALFUPDOWN)
       {
         Stick.HalfUpDown(Stick.Color(0,255,255),2000);
       }
     
+=======
+      Single.ColorSet(Single.Color(0,255,255));
+      if (Stick.ActivePattern != FOLLOWER)
+      {
+        Stick.Follower(Stick.Color(255,0,0), 100, 3, 2);
+      }
+>>>>>>> origin/carrino
       Stick.Update();
     }
     else
     { 
+<<<<<<< HEAD
       Single.Update();
       if(Stick.ActivePattern != SCANNER)
       {
         Stick.Scanner(Stick.Color(0,255,0),70);
       }
     //Stick.Interval = 20;
+=======
+      Single.ColorSet(Single.Wheel(accel.GetCompassReading()));
+      //Serial.print("Compass Reading: "); Serial.println(accel.GetCompassReading());       Serial.print(" ");
+      if(Stick.ActivePattern != THEATER_CHASE)
+      {
+        Stick.TheaterChase(Stick.Color(255,0,0),Stick.Color(0,0,255), 500, FORWARD);
+      }
+>>>>>>> origin/carrino
       Stick.Update();
     }
     /*

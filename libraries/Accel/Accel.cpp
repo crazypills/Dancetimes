@@ -1,4 +1,8 @@
 #include "Accel.h"
+#define MOVING_AVERAGE_INTERVALS 50
+#define ACCEL_THRESHOLD 300
+#define COMPASS_AVERAGE_INTERVALS 500
+#define COMPASS_SAMPLE 2000
 
 Accel::Accel(uint32_t intervalMS)
 {
@@ -20,34 +24,41 @@ bool Accel::begin()
 void
 Accel::Update()
 {
-    if ( millis() - _lastUpdateMS > _intervalMS) 
+    float currentCompass = 0;
+	if ( millis() - _lastUpdateMS > _intervalMS) 
     {
       _lastUpdateMS = millis();
       _lsm.read();
 	  
 	  // Process the accel / compass data
-      Serial.print("Accel X: "); Serial.print((int)_lsm.accelData.x); Serial.print(" ");
-      Serial.print("Y: "); Serial.print((int)_lsm.accelData.y);       Serial.print(" ");
-      Serial.print("Z: "); Serial.println((int)_lsm.accelData.z);     Serial.print(" ");
-      Serial.print("Mag X: "); Serial.print((int)_lsm.magData.x);     Serial.print(" ");
-      Serial.print("Y: "); Serial.print((int)_lsm.magData.y);         Serial.print(" ");
-      Serial.print("Z: "); Serial.println((int)_lsm.magData.z);       Serial.print(" ");
+      
 
       float x = _lsm.accelData.x;
       float y = _lsm.accelData.y;
       float z = _lsm.accelData.z;
+	  float magx = _lsm.magData.x;
+	  float magy = _lsm.magData.y;
+	  
+      Serial.print("Accel X: "); Serial.print(x); Serial.print(" ");
+      Serial.print("Y: "); Serial.print(y);       Serial.print(" ");
+      Serial.print("Z: "); Serial.print(z);     Serial.print(" ");
+      Serial.print("Mag X: "); Serial.print(magx);     Serial.print(" ");
+      Serial.print("Y: "); Serial.print(magy);         Serial.print(" ");
+	  
       float currentAbsAccel = abs(sqrt(x*x + y*y + z*z) - 1000.0);
-      _avgAbsAccel = (_avgAbsAccel * 49.0 + currentAbsAccel)/50.0;
-      _isDancing = _avgAbsAccel > 300.0;
-	  Serial.print("avgAbsAccel: "); Serial.println(_avgAbsAccel);       Serial.print(" ");
-	  Serial.print("currentAbsAccel: "); Serial.println(currentAbsAccel);       Serial.print(" ");
+      _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
+      _isDancing = _avgAbsAccel > ACCEL_THRESHOLD;
+	  //Serial.print("avgAbsAccel: "); Serial.println(_avgAbsAccel);       Serial.print(" ");
+	  //Serial.print("currentAbsAccel: "); Serial.println(currentAbsAccel);       Serial.print(" ");
       //CompassReading will be a number between 0-255, normalized from serial inputs
-      float heading = atan2(_lsm.magData.y, _lsm.magData.x);
+      float heading = atan2(magy, magx);
       // Correct for when signs are reversed.
+	  Serial.print("heading: "); Serial.println(heading);       Serial.print(" ");
       if (heading < 0)
       { 
         heading += 2*PI;
       }
+	  Serial.print("heading: "); Serial.println(heading);       Serial.print(" ");
       // Check for wrap due to addition of declination.
       if (heading >= 2*PI)
       {
@@ -75,16 +86,6 @@ Accel::Update()
 
       //Convert float to int
       _compassReading = (int)_compassAvg;
-
-//      //read the direction, and see if the threshold is in a state for the transition function
-//      if ( ( DirectionalThreshold != true ) && ( ( compassReading % 64) < 1 || ( ( compassReading % 64 ) > 62 ) ) )
-//         {
-//            DirectionalThreshold = true;
-//         }
-//      else if ( ( DirectionalThreshold == true) && ( ( compassReading % 64 ) > 1 && ( ( compassReading % 64 ) < 62 ) ) ) 
-//         {
-//            DirectionalThreshold = false;
-//         }
     }
 }
 
