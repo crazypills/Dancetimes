@@ -1,8 +1,7 @@
 #include "Accel.h"
 #define MOVING_AVERAGE_INTERVALS 50
 #define ACCEL_THRESHOLD 300
-#define COMPASS_AVERAGE_INTERVALS 500
-#define COMPASS_SAMPLE 2000
+#define COMPASS_AVERAGE_INTERVALS 100
 
 Accel::Accel(uint32_t intervalMS)
 {
@@ -36,8 +35,8 @@ Accel::Update()
       float x = _lsm.accelData.x;
       float y = _lsm.accelData.y;
       float z = _lsm.accelData.z;
-	  float magx = _lsm.magData.x;
-	  float magy = _lsm.magData.y;
+      float magx = _lsm.magData.x;
+      float magy = _lsm.magData.y;
 	  
       Serial.print("Accel X: "); Serial.print(x); Serial.print(" ");
       Serial.print("Y: "); Serial.print(y);       Serial.print(" ");
@@ -52,21 +51,16 @@ Accel::Update()
 	  //Serial.print("currentAbsAccel: "); Serial.println(currentAbsAccel);       Serial.print(" ");
       //CompassReading will be a number between 0-255, normalized from serial inputs
       float heading = atan2(magy, magx);
+      Serial.print("heading: "); Serial.println(heading);       Serial.print(" ");
+
       // Correct for when signs are reversed.
-	  Serial.print("heading: "); Serial.println(heading);       Serial.print(" ");
-      if (heading < 0)
-      { 
+      if (heading < 0) { 
         heading += 2*PI;
-      }
-	  Serial.print("heading: "); Serial.println(heading);       Serial.print(" ");
-      // Check for wrap due to addition of declination.
-      if (heading >= 2*PI)
-      {
+      } else if (heading >= 2*PI) {
+        // Check for wrap due to addition of declination.
         heading -= 2*PI;
       }
-      // Convert radians to 256 scale for readability.
-      //float headingDegrees = heading * 180/M_PI * (256/360); 
-	  //heading = ((heading * 180 * 256 ) / 360) / 3.141567;
+
       heading = heading * 180 / PI;
       Serial.print("headingdegrees: "); Serial.println(heading);       Serial.print(" ");
 
@@ -77,7 +71,7 @@ Accel::Update()
           heading += 360;
       }
 
-      _compassAvg = (_compassAvg * 99.0 + heading) / 100.0;
+      _compassAvg = (_compassAvg * (COMPASS_AVERAGE_INTERVALS - 1) + heading) / COMPASS_AVERAGE_INTERVALS;
       if (_compassAvg < 0) {
           _compassAvg += 360;
       } else if (_compassAvg >= 360) {
