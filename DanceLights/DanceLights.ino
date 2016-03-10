@@ -3,7 +3,7 @@
 #include <Accel.h>
 
 
-#define ACCEL_INTERVAL_MS 30
+#define ACCEL_INTERVAL_MS 100
 
 // Define some NeoPatterns for the two rings and the stick
 //  as well as some completion routines
@@ -46,36 +46,68 @@ void loop()
 	  accel.Update();
 
     if (accel.isDancing())
-        //if (digitalRead(9) == LOW)
     {
       Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
+<<<<<<< HEAD
+      if(Stick.ActivePattern != FOLLOWER)
+      {
+        Stick.Follower(Stick.Color(0,255,0),40,2,2);
+      }
+    
+      Stick.Update();
+    }
+    else if (digitalRead(9) == LOW)
+    {
+      if(Stick.ActivePattern != FOLLOWER)
+      {
+        Stick.Follower(Stick.Color(255,0,255),200,1,5);
+      }
+=======
       if (Stick.ActivePattern != FOLLOWER)
       {
         Stick.Follower(Stick.Color(0,255,0), 50, 1, 4);
       }
       Stick.Interval = 50;
+>>>>>>> origin/carrino
       Stick.Update();
     }
     // Update the rings.
     //Single.ActivePattern = RAINBOW_CYCLE;
     else if (digitalRead(10) == LOW)
     {
+<<<<<<< HEAD
+      if(Stick.ActivePattern != HALFUPDOWN)
+      {
+        Stick.HalfUpDown(Stick.Color(0,255,255),2000);
+      }
+    
+=======
       Single.ColorSet(Single.Color(0,255,255));
       if (Stick.ActivePattern != FOLLOWER)
       {
         Stick.Follower(Stick.Color(255,0,0), 100, 3, 2);
       }
+>>>>>>> origin/carrino
       Stick.Update();
     }
     else
     { 
+<<<<<<< HEAD
+      Single.Update();
+      if(Stick.ActivePattern != SCANNER)
+      {
+        Stick.Scanner(Stick.Color(0,255,0),70);
+      }
+    //Stick.Interval = 20;
+=======
       Single.ColorSet(Single.Wheel(accel.GetCompassReading()));
       //Serial.print("Compass Reading: "); Serial.println(accel.GetCompassReading());       Serial.print(" ");
       if(Stick.ActivePattern != THEATER_CHASE)
       {
         Stick.TheaterChase(Stick.Color(255,0,0),Stick.Color(0,0,255), 500, FORWARD);
       }
+>>>>>>> origin/carrino
       Stick.Update();
     }
     /*
