@@ -83,7 +83,7 @@ Accel::Update()
     }
 }
 
-uint16_t Accel::GetCompassReading()
+long Accel::GetCompassReading()
 {
 	return _compassReading;
 }
