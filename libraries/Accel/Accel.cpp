@@ -49,14 +49,15 @@ Accel::Update()
         heading += 2*PI;
       }
       // Check for wrap due to addition of declination.
-      if (heading > 2*PI)
+      if (heading >= 2*PI)
       {
         heading -= 2*PI;
       }
       // Convert radians to 256 scale for readability.
       //float headingDegrees = heading * 180/M_PI * (256/360); 
-	  heading = ((heading * 180 * 256 ) / 360) / 3.141567;
-	  Serial.print("heading256: "); Serial.println(heading);       Serial.print(" ");
+	  //heading = ((heading * 180 * 256 ) / 360) / 3.141567;
+      heading = heading * 180 / PI;
+      Serial.print("headingdegrees: "); Serial.println(heading);       Serial.print(" ");
 
       // We adjust the heading before taking the moving average to handle the 360 -> 0 jump
       if (heading > _compassAvg + 180) {
