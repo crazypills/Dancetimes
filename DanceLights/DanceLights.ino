@@ -51,7 +51,7 @@ void loop()
       //Stick.ColorSet(Stick.Color(255, 0, 0));
       if(Stick.ActivePattern != FOLLOWER)
       {
-        Stick.Follower(Stick.Color(0,255,0),40,2,2);
+        Stick.Follower(Stick.Color(0,255,0),40,2);
       }
     
       Stick.Update();
@@ -60,7 +60,7 @@ void loop()
     {
       if(Stick.ActivePattern != FOLLOWER)
       {
-        Stick.Follower(Stick.Color(255,0,255),200,1,5);
+        Stick.Follower(Stick.Color(255,0,255),200,5);
       }
       Stick.Update();
     }
@@ -70,7 +70,7 @@ void loop()
     {
       if(Stick.ActivePattern != HALFUPDOWN)
       {
-        Stick.HalfUpDown(Stick.Color(0,255,255),2000);
+        Stick.HalfUpDown(Stick.Color(0,255,255),500);
       }
     
       Stick.Update();
@@ -145,7 +145,16 @@ void loop()
 void StickComplete()
 {
     // Random color change for next scan
-    Stick.Color1 = Stick.Wheel(random(255));
+    if (Stick.ActivePattern == HALFUPDOWN)
+    {
+      Stick.Color1 = Stick.Wheel(random(255));
+      Stick.setBrightness(0);
+      Stick.show();
+    }
+    else
+    {
+      Stick.Color1 = Stick.Wheel(random(255));
+    }
 }
 
 void SingleComplete()

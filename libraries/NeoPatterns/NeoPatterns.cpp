@@ -12,7 +12,8 @@ void NeoPatterns::Update()
   if ((millis() - lastUpdate) > Interval) // time to update
   {
 	
-    lastUpdate = millis();
+	setBrightness(128);
+	lastUpdate = millis();
     switch (ActivePattern)
     {
       case RAINBOW_CYCLE:
@@ -43,9 +44,10 @@ void NeoPatterns::Update()
 		HalfUpDownUpdate();
 		break;
       default:
-        break;
+		break;
     }
   }
+  
 }
 
 // Increment the Index and reset at the end
@@ -95,7 +97,7 @@ NeoPatterns::Reverse()
 }
 
 // Initialize for a RainbowCycle
-void NeoPatterns::RainbowCycle(uint8_t interval, direction dir)
+void NeoPatterns::RainbowCycle(uint32_t interval, direction dir)
 {
   ActivePattern = RAINBOW_CYCLE;
   Interval = interval;
@@ -118,7 +120,7 @@ NeoPatterns::RainbowCycleUpdate()
 
 // Initialize for a Theater Chase
 void
-NeoPatterns::TheaterChase(uint32_t color1, uint32_t color2, uint8_t interval, direction dir)
+NeoPatterns::TheaterChase(uint32_t color1, uint32_t color2, uint32_t interval, direction dir)
 {
   ActivePattern = THEATER_CHASE;
   Interval = interval;
@@ -150,7 +152,7 @@ NeoPatterns::TheaterChaseUpdate()
 
 // Initialize for a ColorWipe
 void
-NeoPatterns::ColorWipe(uint32_t color, uint8_t interval, direction dir)
+NeoPatterns::ColorWipe(uint32_t color, uint32_t interval, direction dir)
 {
   ActivePattern = COLOR_WIPE;
   Interval = interval;
@@ -171,7 +173,7 @@ NeoPatterns::ColorWipeUpdate()
 
 // Initialize for a SCANNNER
 void
-NeoPatterns::Scanner(uint32_t color1, uint8_t interval)
+NeoPatterns::Scanner(uint32_t color1, uint32_t interval)
 {
   ActivePattern = SCANNER;
   Interval = interval;
@@ -203,26 +205,24 @@ NeoPatterns::ScannerUpdate()
   Increment();
 }
 void
-NeoPatterns::Follower(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers)
+NeoPatterns::Follower(uint32_t color1, uint32_t interval, uint8_t followers)
 {
   ActivePattern = FOLLOWER;
   Interval = interval;
   TotalSteps = numPixels();
   Color1 = color1;
-  Width = width;
   Followers = followers;
   Index = 0;
 }
 
 // Initialize for a SCANNNER
 void
-NeoPatterns::DoubleScanner(uint32_t color1, uint8_t interval, uint8_t width, uint8_t followers)
+NeoPatterns::DoubleScanner(uint32_t color1, uint32_t interval, uint8_t followers)
 {
   ActivePattern = DOUBLESCANNER;
   Interval = interval;
   TotalSteps = numPixels();
   Color1 = color1;
-  Width = width;
   Followers = followers;
   Index = 0;
 }
@@ -291,7 +291,7 @@ NeoPatterns::FollowerUpdate()
 
 // Initialize for a Fade
 void
-NeoPatterns::Fade(uint32_t color1, uint32_t color2, uint16_t steps, uint8_t interval, direction dir)
+NeoPatterns::Fade(uint32_t color1, uint32_t color2, uint16_t steps, uint32_t interval, direction dir)
 {
   ActivePattern = FADE;
   Interval = interval;
@@ -319,7 +319,7 @@ NeoPatterns::FadeUpdate()
 
 // Initialize for a SCANNNER
 void
-NeoPatterns::HalfUpDown(uint32_t color1, uint8_t interval)
+NeoPatterns::HalfUpDown(uint32_t color1, uint32_t interval)
 {
   ActivePattern = HALFUPDOWN;
   Interval = interval;
