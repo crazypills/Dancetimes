@@ -69,7 +69,7 @@ NeoPatterns::Increment()
   else // Direction == REVERSE
   {
     --Index;
-    if (Index <= 0)
+    if (Index < 0)
     {
       Index = TotalSteps - 1;
       if (OnComplete != NULL)
