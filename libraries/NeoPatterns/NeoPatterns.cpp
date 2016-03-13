@@ -343,9 +343,10 @@ NeoPatterns::HalfUpDown(uint32_t color1, uint32_t interval)
 void
 NeoPatterns::HalfUpDownUpdate()
 {
+	clear();
   for (int i = 0; i < numPixels(); i++)
   {
-    if (i == Index)  // Scan Pixel to the right
+    if (i <= Index)  // Scan Pixel to the right
     {
       setPixelColor(i, Color1);
 	  setPixelColor(numPixels()-i, Color1);
@@ -531,4 +532,10 @@ NeoPatterns::Wheel(byte WheelPos)
     WheelPos -= 170;
     return Color(WheelPos * 3, 255 - WheelPos * 3, 0);
   }
+}
+
+void
+NeoPatterns::SetIndex(float percentage)
+{
+	Index = percentage * TotalSteps;
 }

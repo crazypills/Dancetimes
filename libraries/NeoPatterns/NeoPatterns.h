@@ -98,6 +98,8 @@ class NeoPatterns : public Adafruit_NeoPixel
     void SetCompassReading( uint16_t compassReading);
     // Update the Fade Pattern
     void CompassUpdate();
+	// this is between 0 and 1
+	void SetIndex(float percentage);
     // Calculate 50% dimmed version of a color (used by ScannerUpdate)
     uint32_t DimColor(uint32_t color);
     // Set all pixels to a color (synchronously)

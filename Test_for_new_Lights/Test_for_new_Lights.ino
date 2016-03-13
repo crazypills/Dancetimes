@@ -11,7 +11,7 @@ void StickComplete();
 void SingleComplete();
 
 Accel accel(ACCEL_INTERVAL_MS);
-NeoPatterns Stick(30, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
+NeoPatterns Stick(20, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 
 bool DirectionalThreshold;  //whether the compass threshold can be used
@@ -53,9 +53,19 @@ void loop()
     // Update the rings.
     Single.Update();    
 	  accel.Update();
- 
-
-  
+    //Stick.SetIndex((accel.getPhase()+PI)/(2*PI));
+    Stick.SetIndex(abs(accel.getPhase()/PI));
+    /*
+    if (accel.getPhase() > 0)
+    {
+      Stick.ColorSet(Stick.Color(255,0,0));
+    }
+    else
+    {
+      Stick.ColorSet(Stick.Color(0,255,255));
+    }
+    */
+    /*
     if (accel.isDancing())
     {
       Single.ColorSet(Single.Wheel(random(255)));
@@ -65,9 +75,10 @@ void loop()
         //Stick.Follower(Stick.Color(0,255,0),40,2);
       }
     
-      Stick.Update();
+      //Stick.Update();
     }
-    else if (digitalRead(9) == LOW)
+    
+    else */if (digitalRead(9) == LOW)
     {
       if(Stick.ActivePattern != FOLLOWER)
       {
@@ -89,9 +100,11 @@ void loop()
     else
     { 
       Single.Update();
-      if(Stick.ActivePattern != FADE)
+      if(Stick.ActivePattern != HALFUPDOWN)
       {
-        Stick.Fade(Stick.Color(255,0,0),Stick.Color(0,255,255),120,50,FORWARD);
+        //Stick.Fade(Stick.Color(255,0,0),Stick.Color(0,255,255),120,50,FORWARD);
+        Stick.HalfUpDown(Stick.Wheel(random(255)),50);
+        
       }
     //Stick.Interval = 20;
       Stick.Update();
