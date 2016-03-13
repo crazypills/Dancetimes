@@ -15,7 +15,6 @@ void NeoPatterns::Update()
   if ((millis() - lastUpdate) > Interval) // time to update
   {
 	
-	setBrightness(128);
 	lastUpdate = millis();
     switch (ActivePattern)
     {
@@ -45,6 +44,15 @@ void NeoPatterns::Update()
 		break;
 		case HALFUPDOWN:
 		HalfUpDownUpdate();
+		break;
+		case TWINKLE:
+		TwinkleUpdate();
+		break;
+		case RUNNING:
+		RunningUpdate();
+		break;
+		case RUNNINGRAINBOW:
+		RunningRainbowUpdate();
 		break;
       default:
 		break;
@@ -220,13 +228,12 @@ NeoPatterns::Follower(uint32_t color1, uint32_t interval, uint8_t followers)
 
 // Initialize for a SCANNNER
 void
-NeoPatterns::DoubleScanner(uint32_t color1, uint32_t interval, uint8_t followers)
+NeoPatterns::DoubleScanner(uint32_t color1, uint32_t interval)
 {
   ActivePattern = DOUBLESCANNER;
   Interval = interval;
   TotalSteps = numPixels();
   Color1 = color1;
-  Followers = followers;
   Index = 0;
 }
 
@@ -347,13 +354,99 @@ NeoPatterns::HalfUpDownUpdate()
   show();
   Increment();
 }
+void
+NeoPatterns::RunningRainbow(uint32_t color1, uint32_t interval)
+{
+  ActivePattern = RUNNINGRAINBOW;
+  Interval = interval;
+  TotalSteps = numPixels();
+  Color1 = color1;
+  Index = 0;
+}
+
+// Update the Scanner Pattern
+void
+NeoPatterns::RunningRainbowUpdate()
+{
+     for(int i=0; i< TotalSteps; i++) 
+	 {
+          // sine wave, 3 offset waves make a rainbow!
+          //float level = sin(i+Position) * 127 + 128;
+          //setPixel(i,level,0,0);
+          //float level = sin(i+Position) * 127 + 128;
+          setPixelColor(i,((sin(i+Index) * 127 + 128)/255)*Red((Wheel(((i * 256 / numPixels()) + Index) & 255))),
+                     ((sin(i+Index) * 127 + 128)/255)*Green((Wheel(((i * 256 / numPixels()) + Index) & 255))),
+                     ((sin(i+Index) * 127 + 128)/255)*Blue((Wheel(((i * 256 / numPixels()) + Index) & 255))));
+     }
+		
+  show();
+  Increment();
+}
+void
+NeoPatterns::Running(uint32_t color1, uint32_t interval)
+{
+  ActivePattern = RUNNING;
+  Interval = interval;
+  TotalSteps = numPixels();
+  Color1 = color1;
+  Index = 0;
+}
+
+// Update the Scanner Pattern
+void
+NeoPatterns::RunningUpdate()
+{
+     for(int i=0; i< TotalSteps; i++) 
+	 {
+          // sine wave, 3 offset waves make a rainbow!
+          //float level = sin(i+Position) * 127 + 128;
+          //setPixel(i,level,0,0);
+          //float level = sin(i+Position) * 127 + 128;
+          setPixelColor(i,((sin(i+Index) * 127 + 128)/255)*Red(Color1),
+                     ((sin(i+Index) * 127 + 128)/255)*Green(Color1),
+                     ((sin(i+Index) * 127 + 128)/255)*Blue(Color1));
+     }
+		
+  show();
+  Increment();
+}
 
 // Initialize for a Compass Function
 void
-NeoPatterns::Compass( uint16_t compassreading, uint16_t steps)
+NeoPatterns::Twinkle( uint8_t sparkles, uint32_t interval)
+{
+  ActivePattern = TWINKLE;
+  Index = 0;
+  Interval = interval;
+  TotalSteps = sparkles + 1;
+}
+
+// Update the Fade Pattern
+void
+NeoPatterns::TwinkleUpdate()
+{
+	if (Index == 0)
+	{
+		clear();
+		Interval = 350;
+	}
+	else
+	{
+		setPixelColor(random(numPixels()),random(0,255),random(0,255),random(0,255));
+	}		     
+	if (Index == TotalSteps-1)
+	{
+		Interval = ENDPAUSE;
+	}
+  show();
+  Increment();
+}
+
+// Initialize for a Compass Function
+void
+NeoPatterns::Compass( uint16_t compassReading, uint16_t steps)
 {
   ActivePattern = COMPASS;
-  CompassReading = compassreading;
   Index = 0;
   TotalSteps = steps;
 }
@@ -362,47 +455,17 @@ NeoPatterns::Compass( uint16_t compassreading, uint16_t steps)
 void
 NeoPatterns::CompassUpdate()
 {
-  // Calculate linear interpolation between Color1 and Color2
-  // Optimise order of operations to minimize truncation error
-  //uint8_t red = ((Red(Color1) * (TotalSteps - Index)) + (Red(Color2) * Index)) / TotalSteps;
-  //uint8_t green = ((Green(Color1) * (TotalSteps - Index)) + (Green(Color2) * Index)) / TotalSteps;
-  //uint8_t blue = ((Blue(Color1) * (TotalSteps - Index)) + (Blue(Color2) * Index)) / TotalSteps;
-  uint8_t red = 0;
-  uint8_t green = 0;
-  uint8_t blue = 0;
-
-  if ( CompassReading / 4 == 0 )
-  {
-    red = 255;
-    green = 0;
-    blue = 0;
-
-  }
-  else if ( CompassReading / 4 == 1 )
-  {
-
-    red = 128;
-    green = 0;
-    blue = 255;
-  }
-  else if ( CompassReading / 4 == 2 )
-  {
-
-    red = 0;
-    green = 255;
-    blue = 255;
-  }
-  else if ( CompassReading / 4 == 3 )
-  {
-
-    red = 128;
-    green = 255;
-    blue = 0;
-  }
-  //calculate based on 0-255 what direction we are facing from compass, brightness 50%-100%
-  setBrightness( ( ( (CompassReading % 64) *.5 ) + 32 ) * 4);
-  ColorSet(Color(red, green, blue));
+  
+	  for (int i=0; i<TotalSteps; i++) 
+	  {
+		  if (i == 0 )
+		  {
+		  	clear();
+		  }
+	     setPixelColor(random(numPixels()),random(0,255),random(0,255),random(0,255));
+	   }
   show();
+  Increment();
 }
 
 

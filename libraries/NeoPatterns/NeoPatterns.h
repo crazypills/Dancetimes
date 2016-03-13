@@ -1,11 +1,12 @@
 	#ifndef ADAFRUIT_NEOPATTERN_H
 #define ADAFRUIT_NEOPATTERN_H
+#define ENDPAUSE 5000
 
 #include <Adafruit_NeoPixel.h>
 
 // Pattern types supported:
 
-enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE , COMPASS, DOUBLESCANNER, FOLLOWER, HALFUPDOWN};
+enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE , COMPASS, DOUBLESCANNER, FOLLOWER, HALFUPDOWN, TWINKLE, RUNNING, RUNNINGRAINBOW};
 // Patern directions supported:
 enum  direction { FORWARD, REVERSE };
 
@@ -34,6 +35,8 @@ class NeoPatterns : public Adafruit_NeoPixel
 	uint8_t Followers;  //how many followers are in each pass
     uint16_t CompassReading;  //reading from the compass function
 	uint8_t Flicker = 3;
+	uint8_t Brightness;
+	uint8_t Sparkles;
 	
     
     void (*OnComplete)();  // Callback on completion of pattern
@@ -66,13 +69,30 @@ class NeoPatterns : public Adafruit_NeoPixel
     void Fade(uint32_t color1, uint32_t color2, uint16_t steps, uint32_t interval, direction dir = FORWARD);
     // Update the Fade Pattern
     void FadeUpdate();
-	void DoubleScanner(uint32_t color1, uint32_t interval, uint8_t followers);
+	// Initialize for a DoubleScanner
+	void DoubleScanner(uint32_t color1, uint32_t interval);
+	// Update the Double Scanner Pattern
 	void DoubleScannerUpdate();
+	// Initialize for a Follower
 	void Follower(uint32_t color1, uint32_t interval, uint8_t followers);
+	// Update the Follower pattern
 	void FollowerUpdate();
+	// Initialize a HalfUpDown 
 	void HalfUpDown(uint32_t color1, uint32_t interval);
+	// Update the HalfUpDown Pattern
 	void HalfUpDownUpdate();
-	
+	// Initialize a Running
+	void Running(uint32_t color1, uint32_t interval);
+	// Update the Running Pattern
+	void RunningUpdate();
+	// Initialize a Running Rainbow
+	void RunningRainbow(uint32_t color1, uint32_t interval);
+	// Update the Running Rainbow
+	void RunningRainbowUpdate();
+	// Initialize a Twinkle
+	void Twinkle(uint8_t sparkles, uint32_t interval);
+	// Update the Twinkle Pattern
+	void TwinkleUpdate();
     // Initialize for a Compass Function
 	void Compass(uint16_t compassReading, uint16_t steps);
     void SetCompassReading( uint16_t compassReading);
