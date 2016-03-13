@@ -81,7 +81,7 @@ void loop()
     {
       if(Stick.ActivePattern != HALFUPDOWN)
       {
-        Stick.HalfUpDown(Stick.Color(0,255,255),500);
+        Stick.HalfUpDown(Stick.Color(0,255,255),60);
       }
     
       Stick.Update();
@@ -89,9 +89,9 @@ void loop()
     else
     { 
       Single.Update();
-      if(Stick.ActivePattern != RUNNINGRAINBOW)
+      if(Stick.ActivePattern != FADE)
       {
-        Stick.RunningRainbow(Stick.Color(0,255,0),120);
+        Stick.Fade(Stick.Color(255,0,0),Stick.Color(0,255,255),120,50,FORWARD);
       }
     //Stick.Interval = 20;
       Stick.Update();
