@@ -4,6 +4,7 @@ NeoPatterns::NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*call
   : Adafruit_NeoPixel(pixels, pin, type)
 {
   OnComplete = callback;
+  floatIndexRate = 1;
 }
 
 // Update the pattern
@@ -68,7 +69,13 @@ NeoPatterns::Increment()
 {
   if (Direction == FORWARD)
   {
-    Index++;
+	  floatIndex += floatIndexRate;
+	  if (floatIndex > 1) {
+		  floatIndex -= 1;
+		  OnComplete();
+	  }
+    //Index++;
+	Index = (int) (TotalSteps * floatIndex);
     if (Index >= TotalSteps)
     {
       Index = 0;
@@ -537,5 +544,6 @@ NeoPatterns::Wheel(byte WheelPos)
 void
 NeoPatterns::SetIndex(float percentage)
 {
+	floatIndex = percentage;
 	Index = percentage * TotalSteps;
 }

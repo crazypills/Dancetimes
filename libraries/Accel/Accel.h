@@ -19,6 +19,7 @@ protected:
 		void computeFht(float newValue);
 		int _old_fht[256];
 		float _phase;
+		float _phaseRateAverage;
 	public:
 		Accel(uint32_t intervalMS);
 		bool begin();		// Convention for this funciton is lower case...not sure why
@@ -27,6 +28,7 @@ protected:
 		bool isDancing();
 		float getPhase();
 		bool directionalThreshold();
+		float getPhaseRate();
 };
 
 #endif // ACCEL_H

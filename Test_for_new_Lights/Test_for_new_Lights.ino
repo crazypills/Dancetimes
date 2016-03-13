@@ -11,7 +11,7 @@ void StickComplete();
 void SingleComplete();
 
 Accel accel(ACCEL_INTERVAL_MS);
-NeoPatterns Stick(20, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
+NeoPatterns Stick(30, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 
 bool DirectionalThreshold;  //whether the compass threshold can be used
@@ -37,7 +37,7 @@ void setup()
     Single.RainbowCycle(120, FORWARD);
     Single.setBrightness(50);
 	accel.begin();
-     Stick.setBrightness(64);
+     Stick.setBrightness(255);
 
     
     //setup the stick with red
@@ -54,7 +54,8 @@ void loop()
     Single.Update();    
 	  accel.Update();
     //Stick.SetIndex((accel.getPhase()+PI)/(2*PI));
-    Stick.SetIndex(abs(accel.getPhase()/PI));
+    //Stick.Interval=((int)((accel.getPhaseRate()+PI)/(2*PI) * 150));
+
     /*
     if (accel.getPhase() > 0)
     {
@@ -65,20 +66,20 @@ void loop()
       Stick.ColorSet(Stick.Color(0,255,255));
     }
     */
-    /*
+    Stick.floatIndexRate = 1.0 / Stick.TotalSteps;
     if (accel.isDancing())
     {
       Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
-      if(Stick.ActivePattern != FOLLOWER)
+      if(Stick.ActivePattern != HALFUPDOWN)
       {
-        //Stick.Follower(Stick.Color(0,255,0),40,2);
+        Stick.HalfUpDown(Stick.Color(0,255,0),10);
+        Stick.SetIndex((accel.getPhase()+PI)/(2*PI));
       }
-    
-      //Stick.Update();
+      Stick.floatIndexRate = accel.getPhaseRate()/(2*PI);
+      Stick.Update();
     }
-    
-    else */if (digitalRead(9) == LOW)
+    else if (digitalRead(9) == LOW)
     {
       if(Stick.ActivePattern != FOLLOWER)
       {
@@ -90,9 +91,9 @@ void loop()
     //Single.ActivePattern = RAINBOW_CYCLE;
     else if (digitalRead(10) == LOW)
     {
-      if(Stick.ActivePattern != HALFUPDOWN)
+      if(Stick.ActivePattern != RAINBOW_CYCLE)
       {
-        Stick.HalfUpDown(Stick.Color(0,255,255),60);
+        Stick.RainbowCycle(30,FORWARD);
       }
     
       Stick.Update();
@@ -100,10 +101,10 @@ void loop()
     else
     { 
       Single.Update();
-      if(Stick.ActivePattern != HALFUPDOWN)
+      if(Stick.ActivePattern != DOUBLESCANNER)
       {
         //Stick.Fade(Stick.Color(255,0,0),Stick.Color(0,255,255),120,50,FORWARD);
-        Stick.HalfUpDown(Stick.Wheel(random(255)),50);
+        Stick.DoubleScanner(Stick.Wheel(random(255)),50);
         
       }
     //Stick.Interval = 20;

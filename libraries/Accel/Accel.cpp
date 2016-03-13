@@ -127,10 +127,17 @@ void Accel::computeFht(float lastValue) {
       }
 	  int k = maxIndex;
 	  int negK = k == 0 ? 0 : FHT_N - k;
-      Serial.println(maxIndex);
+      //Serial.println(maxIndex);
 	  //float phase = atan2((fht_input[k]	 - fht_input[negK]), (fht_input[k] + fht_input[negK]));
 	  float phase = atan2((fht_input[negK]), (fht_input[k]));
-	  Serial.println(phase);
+	  //Serial.println(phase);
+	  float _phaseDiff = phase - _phase;
+	  if (_phaseDiff < -PI) {
+		  _phaseDiff += 2 * PI;
+	  } else if (_phaseDiff > PI) {
+		  _phaseDiff -= 2 * PI;
+	  }
+	  _phaseRateAverage = (((_phaseRateAverage * 19) + _phaseDiff ) / 20);
 	  _phase = phase;
       //for (int i = 0; i < FHT_N; i++) {
 	//	  fht_input[i] = (int) old_fht[0];
@@ -150,4 +157,9 @@ long Accel::GetCompassReading()
 bool Accel::isDancing()
 {
 	return _isDancing;
+}
+
+float Accel::getPhaseRate()
+{
+	return _phaseRateAverage;
 }

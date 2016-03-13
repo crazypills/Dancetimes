@@ -38,6 +38,9 @@ class NeoPatterns : public Adafruit_NeoPixel
 	uint8_t Brightness;
 	uint8_t Sparkles;
 	
+	float floatIndex;
+	float floatIndexRate;
+	
     
     void (*OnComplete)();  // Callback on completion of pattern
     
