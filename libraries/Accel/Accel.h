@@ -16,9 +16,7 @@ protected:
 		float _accelreadingZ;
 		float _avgAbsAccel;
 		bool _isDancing;
-                int _fht_index;
 		void computeFht(float newValue);
-		
 	public:
 		Accel(uint32_t intervalMS);
 		bool begin();		// Convention for this funciton is lower case...not sure why

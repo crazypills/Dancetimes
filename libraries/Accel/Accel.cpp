@@ -1,6 +1,8 @@
 #include "Accel.h"
-#define LOG_OUT 1
-#define FHT_N 64
+
+#define LIN_OUT 1
+#define LOG_OUT 0
+#define FHT_N 128
 #include <FHT.h>
 
 #define MOVING_AVERAGE_INTERVALS 50
@@ -99,28 +101,30 @@ Accel::Update()
 }
 
 void Accel::computeFht(float lastValue) {
-  fht_input[_fht_index++] = lastValue;
-  if (_fht_index != FHT_N) {
-	  return;
+  for (int i = 0; i < FHT_N - 1; i++) {
+    fht_input[i] = fht_input[i + 1];
   }
-    _fht_index = 0;
-    fht_window();
-    fht_reorder();
-    fht_run();
-    fht_mag_log();
-	int max = 0;
-	int maxIndex = 0;
-	for (int i = 0; i < FHT_N/2; i++)
-	{
-		uint8_t val = fht_log_out[i];
-	    Serial.print("Index: "); Serial.print(i); Serial.print("  val: "); Serial.println(val);
-		if (val > max)
-		{
-			max = val;
-			maxIndex = i;
-		}
-	}
-	Serial.println(maxIndex);
+  fht_input[FHT_N - 1] = (int) lastValue;
+
+  fht_window();
+  fht_reorder();
+  fht_run();
+  //fht_mag_log();
+  fht_mag_lin();
+      int max = 0;
+      int maxIndex = 0;
+      for (int i = 0; i < FHT_N/2; i++)
+      {
+      	//uint8_t val = fht_log_out[i];
+      	uint16_t val = fht_lin_out[i];
+          Serial.print("Index: "); Serial.print(i); Serial.print("  val: "); Serial.println(val);
+      	if (val > max)
+      	{
+      		max = val;
+      		maxIndex = i;
+      	}
+      }
+      Serial.println(maxIndex);
 }
 
 long Accel::GetCompassReading()
