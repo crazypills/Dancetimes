@@ -1,4 +1,7 @@
 #include "Accel.h"
+#define LOG_OUT 1
+#include <FHT.h>
+
 #define MOVING_AVERAGE_INTERVALS 50
 #define ACCEL_THRESHOLD 300
 #define COMPASS_AVERAGE_INTERVALS 100
@@ -49,6 +52,8 @@ Accel::Update()
       Serial.print("Y: "); Serial.println(magy);
 	  
       float currentAbsAccel = abs(sqrt(x*x + y*y + z*z) - 1000.0);
+      computeFht(currentAbsAccel);
+
       _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
       _isDancing = _avgAbsAccel > ACCEL_THRESHOLD;
 	  //Serial.print("avgAbsAccel: "); Serial.println(_avgAbsAccel);       Serial.print(" ");
@@ -86,6 +91,18 @@ Accel::Update()
       //Convert float to int
       _compassReading = (int)_compassAvg;
     }
+}
+
+void Accel::computeFht(float lastValue) {
+  fht_input[_fht_index++] = lastValue;
+  if (_fht_index == FHT_N) {
+    _fht_index = 0;
+    fht_window();
+    fht_reorder();
+    fht_run();
+    fht_mag_log();
+    // Serial.println(fht_log_out, FHT_N/2);
+  }
 }
 
 long Accel::GetCompassReading()
