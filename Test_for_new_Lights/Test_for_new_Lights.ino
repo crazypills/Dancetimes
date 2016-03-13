@@ -3,7 +3,7 @@
 #include <Accel.h>
 
 
-#define ACCEL_INTERVAL_MS 50
+#define ACCEL_INTERVAL_MS 10
 
 // Define some NeoPatterns for the two rings and the stick
 //  as well as some completion routines
@@ -62,7 +62,7 @@ void loop()
       //Stick.ColorSet(Stick.Color(255, 0, 0));
       if(Stick.ActivePattern != FOLLOWER)
       {
-        Stick.Follower(Stick.Color(0,255,0),40,2);
+        //Stick.Follower(Stick.Color(0,255,0),40,2);
       }
     
       Stick.Update();

@@ -17,12 +17,15 @@ protected:
 		float _avgAbsAccel;
 		bool _isDancing;
 		void computeFht(float newValue);
+		int _old_fht[256];
+		float _phase;
 	public:
 		Accel(uint32_t intervalMS);
 		bool begin();		// Convention for this funciton is lower case...not sure why
 		void Update();
 		long GetCompassReading();
 		bool isDancing();
+		float getPhase();
 		bool directionalThreshold();
 };
 

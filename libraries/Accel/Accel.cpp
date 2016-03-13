@@ -1,8 +1,8 @@
 #include "Accel.h"
 
-#define LIN_OUT 1
-#define LOG_OUT 0
-#define FHT_N 128
+#define LIN_OUT 0
+#define LOG_OUT 1
+#define FHT_N 256
 #include <FHT.h>
 
 #define MOVING_AVERAGE_INTERVALS 50
@@ -102,29 +102,44 @@ Accel::Update()
 
 void Accel::computeFht(float lastValue) {
   for (int i = 0; i < FHT_N - 1; i++) {
-    fht_input[i] = fht_input[i + 1];
+    _old_fht[i] = _old_fht[i + 1];
+	fht_input[i] = _old_fht[i];
   }
   fht_input[FHT_N - 1] = (int) lastValue;
-
+  _old_fht[FHT_N - 1] = (int) lastValue;
   fht_window();
   fht_reorder();
   fht_run();
-  //fht_mag_log();
-  fht_mag_lin();
+  fht_mag_log();
+  //fht_mag_lin();
       int max = 0;
       int maxIndex = 0;
       for (int i = 0; i < FHT_N/2; i++)
       {
-      	//uint8_t val = fht_log_out[i];
-      	uint16_t val = fht_lin_out[i];
-          Serial.print("Index: "); Serial.print(i); Serial.print("  val: "); Serial.println(val);
+		  uint8_t val = fht_log_out[i];
+		  //uint16_t val = fht_lin_out[i];
+        //Serial.print("Index: "); Serial.print(i); Serial.print("  val: "); Serial.println(val);
       	if (val > max)
       	{
       		max = val;
       		maxIndex = i;
       	}
       }
+	  int k = maxIndex;
+	  int negK = k == 0 ? 0 : FHT_N - k;
       Serial.println(maxIndex);
+	  //float phase = atan2((fht_input[k]	 - fht_input[negK]), (fht_input[k] + fht_input[negK]));
+	  float phase = atan2((fht_input[negK]), (fht_input[k]));
+	  Serial.println(phase);
+	  _phase = phase;
+      //for (int i = 0; i < FHT_N; i++) {
+	//	  fht_input[i] = (int) old_fht[0];
+	  //}
+}
+
+float Accel::getPhase()
+{
+	return _phase;
 }
 
 long Accel::GetCompassReading()
