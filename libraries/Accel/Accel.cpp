@@ -24,7 +24,11 @@ void
 Accel::Update()
 {
     float currentCompass = 0;
-	if ( millis() - _lastUpdateMS > _intervalMS) 
+    if ( millis() - _lastUpdateMS > _intervalMS * 2) {
+        Serial.println("ERROR: We didn't update in time.");
+    }
+
+    if ( millis() - _lastUpdateMS > _intervalMS) 
     {
       _lastUpdateMS = millis();
       _lsm.read();
@@ -42,7 +46,7 @@ Accel::Update()
       Serial.print("Y: "); Serial.print(y);       Serial.print(" ");
       Serial.print("Z: "); Serial.print(z);     Serial.print(" ");
       Serial.print("Mag X: "); Serial.print(magx);     Serial.print(" ");
-      Serial.print("Y: "); Serial.print(magy);         Serial.print(" ");
+      Serial.print("Y: "); Serial.println(magy);
 	  
       float currentAbsAccel = abs(sqrt(x*x + y*y + z*z) - 1000.0);
       _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
@@ -51,7 +55,8 @@ Accel::Update()
 	  //Serial.print("currentAbsAccel: "); Serial.println(currentAbsAccel);       Serial.print(" ");
       //CompassReading will be a number between 0-255, normalized from serial inputs
       float heading = atan2(magy, magx);
-      Serial.print("heading: "); Serial.println(heading);       Serial.print(" ");
+      Serial.print("heading: "); Serial.println(heading);
+      Serial.print("orientation: "); Serial.println(_lsm.magData.orientation);
 
       // Correct for when signs are reversed.
       if (heading < 0) { 
@@ -62,7 +67,7 @@ Accel::Update()
       }
 
       heading = heading * 180 / PI;
-      Serial.print("headingdegrees: "); Serial.println(heading);       Serial.print(" ");
+      Serial.print("headingdegrees: "); Serial.println(heading);
 
       // We adjust the heading before taking the moving average to handle the 360 -> 0 jump
       if (heading > _compassAvg + 180) {
@@ -70,13 +75,13 @@ Accel::Update()
       } else if (heading < _compassAvg - 180) {
           heading += 360;
       }
-
       _compassAvg = (_compassAvg * (COMPASS_AVERAGE_INTERVALS - 1) + heading) / COMPASS_AVERAGE_INTERVALS;
       if (_compassAvg < 0) {
           _compassAvg += 360;
       } else if (_compassAvg >= 360) {
           _compassAvg -= 360;
       }
+      Serial.print("compasAvg: "); Serial.println(_compassAvg);
 
       //Convert float to int
       _compassReading = (int)_compassAvg;
