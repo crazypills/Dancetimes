@@ -99,6 +99,7 @@ Accel::Update()
 }
 
 void Accel::computeFht(float lastValue) {
+  Serial.println(lastValue); 
   fht_input[_fht_index++] = lastValue;
   if (_fht_index != FHT_N) {
 	  return;
