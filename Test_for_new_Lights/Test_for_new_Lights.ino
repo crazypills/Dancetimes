@@ -3,7 +3,7 @@
 #include <Accel.h>
 
 
-#define ACCEL_INTERVAL_MS 100
+#define ACCEL_INTERVAL_MS 50
 
 // Define some NeoPatterns for the two rings and the stick
 //  as well as some completion routines
@@ -34,7 +34,7 @@ void setup()
    Stick.begin();
    Single.begin();
     //Single.ActivePattern = RAINBOW_CYCLE;
-    Single.RainbowCycle(10, FORWARD);
+    Single.RainbowCycle(120, FORWARD);
     Single.setBrightness(50);
 	accel.begin();
      Stick.setBrightness(64);

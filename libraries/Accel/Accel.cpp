@@ -1,5 +1,6 @@
 #include "Accel.h"
 #define LOG_OUT 1
+#define FHT_N 64
 #include <FHT.h>
 
 #define MOVING_AVERAGE_INTERVALS 50
@@ -44,15 +45,18 @@ Accel::Update()
       float z = _lsm.accelData.z;
       float magx = _lsm.magData.x;
       float magy = _lsm.magData.y;
-	  
+	  float magz = _lsm.magData.z;
+	  /*
       Serial.print("Accel X: "); Serial.print(x); Serial.print(" ");
       Serial.print("Y: "); Serial.print(y);       Serial.print(" ");
       Serial.print("Z: "); Serial.print(z);     Serial.print(" ");
       Serial.print("Mag X: "); Serial.print(magx);     Serial.print(" ");
-      Serial.print("Y: "); Serial.println(magy);
-	  
-      float currentAbsAccel = abs(sqrt(x*x + y*y + z*z) - 1000.0);
-      computeFht(currentAbsAccel);
+      Serial.print("Y: "); Serial.print(magy);  Serial.print(" ");
+	  Serial.print("Z: "); Serial.println(magz);
+	  */
+	  float currentAccel = sqrt(x*x + y*y + z*z) - 1000.0;
+      float currentAbsAccel = abs(currentAccel);
+      computeFht(currentAccel);
 
       _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
       _isDancing = _avgAbsAccel > ACCEL_THRESHOLD;
@@ -60,8 +64,9 @@ Accel::Update()
 	  //Serial.print("currentAbsAccel: "); Serial.println(currentAbsAccel);       Serial.print(" ");
       //CompassReading will be a number between 0-255, normalized from serial inputs
       float heading = atan2(magy, magx);
-      Serial.print("heading: "); Serial.println(heading);
-      Serial.print("orientation: "); Serial.println(_lsm.magData.orientation);
+      
+	  //Serial.print("heading: "); Serial.println(heading);
+      //Serial.print("orientation: "); Serial.println(_lsm.magData.orientation);
 
       // Correct for when signs are reversed.
       if (heading < 0) { 
@@ -72,7 +77,7 @@ Accel::Update()
       }
 
       heading = heading * 180 / PI;
-      Serial.print("headingdegrees: "); Serial.println(heading);
+      //Serial.print("headingdegrees: "); Serial.println(heading);
 
       // We adjust the heading before taking the moving average to handle the 360 -> 0 jump
       if (heading > _compassAvg + 180) {
@@ -86,7 +91,7 @@ Accel::Update()
       } else if (_compassAvg >= 360) {
           _compassAvg -= 360;
       }
-      Serial.print("compasAvg: "); Serial.println(_compassAvg);
+      //Serial.print("compasAvg: "); Serial.println(_compassAvg);
 
       //Convert float to int
       _compassReading = (int)_compassAvg;
@@ -95,14 +100,27 @@ Accel::Update()
 
 void Accel::computeFht(float lastValue) {
   fht_input[_fht_index++] = lastValue;
-  if (_fht_index == FHT_N) {
+  if (_fht_index != FHT_N) {
+	  return;
+  }
     _fht_index = 0;
     fht_window();
     fht_reorder();
     fht_run();
     fht_mag_log();
-    // Serial.println(fht_log_out, FHT_N/2);
-  }
+	int max = 0;
+	int maxIndex = 0;
+	for (int i = 0; i < FHT_N/2; i++)
+	{
+		uint8_t val = fht_log_out[i];
+	    Serial.print("Index: "); Serial.print(i); Serial.print("  val: "); Serial.println(val);
+		if (val > max)
+		{
+			max = val;
+			maxIndex = i;
+		}
+	}
+	Serial.println(maxIndex);
 }
 
 long Accel::GetCompassReading()

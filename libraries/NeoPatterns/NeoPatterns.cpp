@@ -10,7 +10,8 @@ NeoPatterns::NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*call
 void NeoPatterns::Update()
 {
   if (millis() - lastUpdate > Interval * 2) {
-    Serial.println("ERROR: We didn't update in time.");
+	  Serial.println("ERROR: We didn't update lights in time.");
+	  Serial.print(Interval);
   }
   if ((millis() - lastUpdate) > Interval) // time to update
   {
