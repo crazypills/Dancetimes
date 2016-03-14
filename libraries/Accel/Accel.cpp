@@ -126,10 +126,14 @@ void Accel::computeFht(float lastValue) {
       	}
       }
 	  int k = maxIndex;
-	  int negK = k == 0 ? 0 : FHT_N - k;
+	  int negK = FHT_N - 1 - k;
+          int realPlusImg = fht_input[k];
+          int realMinusImg = fht_input[negK];
+          int img = realPlusImg - realMinusImg;
+
       //Serial.println(maxIndex);
 	  //float phase = atan2((fht_input[k]	 - fht_input[negK]), (fht_input[k] + fht_input[negK]));
-	  float phase = atan2((fht_input[negK]), (fht_input[k]));
+          float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg);
 	  //Serial.println(phase);
 	  float _phaseDiff = phase - _phase;
 	  if (_phaseDiff < -PI) {
