@@ -130,18 +130,22 @@ void Accel::computeFht(float lastValue) {
           int realPlusImg = fht_input[k];
           int realMinusImg = fht_input[negK];
 
-      //Serial.println(maxIndex);
 	  //float phase = atan2((fht_input[k]	 - fht_input[negK]), (fht_input[k] + fht_input[negK]));
           float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg);
 	  //Serial.println(phase);
-	  float _phaseDiff = phase - _phase;
-	  if (_phaseDiff < -PI) {
-		  _phaseDiff += 2 * PI;
-	  } else if (_phaseDiff > PI) {
-		  _phaseDiff -= 2 * PI;
-	  }
-	  _phaseRateAverage = (((_phaseRateAverage * 49) + _phaseDiff ) / 50);
-	  _phase = phase;
+          if (maxIndex == _old_max_index && maxIndex != 0) {
+	      float _phaseDiff = phase - _old_phase;
+	      if (_phaseDiff < -PI) {
+                  _phaseDiff += 2 * PI;
+	      } else if (_phaseDiff > PI) {
+                  _phaseDiff -= 2 * PI;
+	      }
+
+              // Only update the rate if we are in the same fht bucket.
+	      _phaseRateAverage = (((_phaseRateAverage * 29) + _phaseDiff ) / 30);
+          }
+	  _old_phase = phase;
+	  _old_max_index = maxIndex;
       //for (int i = 0; i < FHT_N; i++) {
 	//	  fht_input[i] = (int) old_fht[0];
 	  //}
@@ -149,7 +153,7 @@ void Accel::computeFht(float lastValue) {
 
 float Accel::getPhase()
 {
-	return _phase;
+	return _old_phase;
 }
 
 long Accel::GetCompassReading()

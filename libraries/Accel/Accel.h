@@ -18,7 +18,8 @@ protected:
 		bool _isDancing;
 		void computeFht(float newValue);
 		int _old_fht[256];
-		float _phase;
+		float _old_phase;
+		float _old_max_index;
 		float _phaseRateAverage;
 	public:
 		Accel(uint32_t intervalMS);
