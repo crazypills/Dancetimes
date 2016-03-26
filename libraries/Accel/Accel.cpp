@@ -62,9 +62,9 @@ Accel::Update()
 
       _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
       _isDancing = _avgAbsAccel > ACCEL_THRESHOLD;
-	  //Serial.print("avgAbsAccel: "); Serial.println(_avgAbsAccel);       Serial.print(" ");
-	  //Serial.print("currentAbsAccel: "); Serial.println(currentAbsAccel);       Serial.print(" ");
-      //CompassReading will be a number between 0-255, normalized from serial inputs
+      Serial.print("avgAbsAccel: "); Serial.println(_avgAbsAccel);       Serial.print(" ");
+      Serial.print("currentAbsAccel: "); Serial.println(currentAbsAccel);       Serial.print(" ");
+
       float heading = atan2(magy, magx);
       
 	  //Serial.print("heading: "); Serial.println(heading);
@@ -93,7 +93,7 @@ Accel::Update()
       } else if (_compassAvg >= 360) {
           _compassAvg -= 360;
       }
-      //Serial.print("compasAvg: "); Serial.println(_compassAvg);
+      Serial.print("compasAvg: "); Serial.println(_compassAvg);
 
       //Convert float to int
       _compassReading = (int)_compassAvg;
@@ -114,7 +114,7 @@ void Accel::computeFht(float lastValue) {
   //fht_mag_lin();
       int max = 0;
       int maxIndex = 0;
-      for (int i = 0; i < FHT_N/2; i++)
+      for (int i = 1; i < FHT_N/2; i++)
       {
 		  uint8_t val = fht_log_out[i];
 		  //uint16_t val = fht_lin_out[i];
