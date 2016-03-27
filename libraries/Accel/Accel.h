@@ -29,6 +29,7 @@ protected:
 		long GetCompassReading();
 		bool isDancing();
 		float getPhase();
+		float getPhasePercentage();
 		bool directionalThreshold();
 		float getPhaseRate();
 };

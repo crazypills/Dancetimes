@@ -6,7 +6,7 @@
 #include <FHT.h>
 
 #define MOVING_AVERAGE_INTERVALS 50
-#define ACCEL_THRESHOLD 1
+#define ACCEL_THRESHOLD 2
 #define COMPASS_AVERAGE_INTERVALS 100
 #define ACCELEROMETER_CALIBRATE 0
 
@@ -69,7 +69,7 @@ Accel::Update()
     _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
     _isDancing = _avgAbsAccel > ACCEL_THRESHOLD;
     // Serial.print("avgAbsAccel: "); Serial.println(_avgAbsAccel);       Serial.print(" ");
-    Serial.print("currentAccel: "); Serial.println(currentAccel);
+    // Serial.print("currentAccel: "); Serial.println(currentAccel);
     // Serial.print("temp (C): "); Serial.println(tempEvent.temperature);       Serial.print(" ");
 
     float heading = atan2(magy, magx);
@@ -144,9 +144,9 @@ void Accel::computeFht(float lastValue) {
     Serial.print("Phase: "); Serial.println(phase);
     if (maxIndex == _old_max_index && maxIndex != 0) {
         float _phaseDiff = phase - _old_phase;
-        if (_phaseDiff < -PI) {
+        if (_phaseDiff < 0) {
             _phaseDiff += 2 * PI;
-        } else if (_phaseDiff > PI) {
+        } else if (_phaseDiff >= 2*PI) {
             _phaseDiff -= 2 * PI;
         }
 
@@ -157,12 +157,19 @@ void Accel::computeFht(float lastValue) {
     _old_max_index = maxIndex;
 
     _phase_avg += _phaseRateAverage;
-    if (_phase_avg < -PI) {
-        _phase_avg += PI;
-    } else if (_phase_avg >= PI) {
-        _phase_avg -= PI;
+    if (phase + PI < _phase_avg) {
+        phase += 2*PI;
+    } else if (phase - PI > _phase_avg) {
+        phase -= 2*PI;
     }
+
     _phase_avg = (_phase_avg * 19 + phase) / 20;
+    if (_phase_avg < -PI) {
+        _phase_avg += 2*PI;
+    } else if (_phase_avg >= PI) {
+        _phase_avg -= 2*PI;
+    }
+
     Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
     Serial.print("Phase Avg: "); Serial.println(_phase_avg);
     //for (int i = 0; i < FHT_N; i++) {
@@ -170,9 +177,12 @@ void Accel::computeFht(float lastValue) {
     //}
 }
 
-float Accel::getPhase()
-{
-    return _old_phase;
+float Accel::getPhase() {
+    return _phase_avg;
+}
+
+float Accel::getPhasePercentage() {
+    return (_phase_avg * PI)/(2*PI);
 }
 
 long Accel::GetCompassReading()
