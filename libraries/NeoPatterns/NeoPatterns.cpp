@@ -543,11 +543,12 @@ NeoPatterns::Wheel(byte WheelPos)
 void
 NeoPatterns::SetIndex(float percentage, float percentageRate) {
     if (OnComplete != NULL && percentage < floatIndex && floatIndex + 2*percentageRate > 1) {
+        Serial.print("complete: "); Serial.println(percentage);
         OnComplete();
     }
 
-    //Serial.print("perc: "); Serial.println(percentage);
-    //Serial.print("percrate: "); Serial.println(percentageRate);
+    // Serial.print("perc: "); Serial.println(percentage);
+    // Serial.print("percrate: "); Serial.println(percentageRate);
 
     floatIndexRate = 0;
     floatIndex = percentage;

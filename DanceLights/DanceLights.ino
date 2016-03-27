@@ -3,7 +3,7 @@
 #include <Accel.h>
 
 
-#define ACCEL_INTERVAL_MS 100
+#define ACCEL_INTERVAL_MS 20
 
 // Define some NeoPatterns for the two rings and the stick
 //  as well as some completion routines
@@ -164,4 +164,5 @@ void SingleComplete()
 {
     // Random color change for next scan
     Single.Color1 = Stick.Wheel(random(255));
+    //Serial.println("callback: ");
 }
