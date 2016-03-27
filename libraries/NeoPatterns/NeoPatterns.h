@@ -34,10 +34,11 @@ class NeoPatterns : public Adafruit_NeoPixel
     uint16_t Index;  // current step within the pattern
 	uint8_t Followers;  //how many followers are in each pass
     uint16_t CompassReading;  //reading from the compass function
-	uint8_t Flicker = 3;
-	uint8_t Brightness;
+	//uint8_t Flicker = 3;
+	//uint8_t Brightness;
 	uint8_t Sparkles;
-	uint8_t LastColors[24]= {0};
+	uint8_t *LastColors;
+	bool BlankState;
 	
 	float floatIndex;
 	float floatIndexRate;
@@ -49,6 +50,8 @@ class NeoPatterns : public Adafruit_NeoPixel
     NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)());
     // Update the pattern
     void Update();
+	// Blank turns off the lights and prevents them from making progress
+	void SetBlank(bool blank);
     // Increment the Index and reset at the end
     void Increment(); 
     // Reverse pattern direction
@@ -114,6 +117,9 @@ class NeoPatterns : public Adafruit_NeoPixel
     uint8_t Green(uint32_t color);
     // Returns the Blue component of a 32-bit color
     uint8_t Blue(uint32_t color);
+	uint32_t setRed(uint8_t red);
+	uint32_t setGreen(uint8_t green);
+	uint32_t setBlue(uint8_t blue);
     // Input a value 0 to 255 to get a color value.
     // The colours are a transition r - g - b - back to r.
     uint32_t Wheel(byte WheelPos);
@@ -121,6 +127,10 @@ class NeoPatterns : public Adafruit_NeoPixel
 	void StoreLights();
 	// Return the lights to the previous state
 	void RestoreLights();
+	
+	void setPixelColor(uint16_t n, uint32_t c);
+    void setPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
+	
 };
 
 #endif // ADAFRUIT_NEOPATTERN_H

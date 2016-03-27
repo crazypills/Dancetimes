@@ -18,8 +18,8 @@ NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 bool DirectionalThreshold;  //whether the compass threshold can be used
 bool Dance;                 //whether accelerometer is dancing hard enought to be used
 bool Lighton;
-unsigned long cycletime = 100;
-unsigned long offtime = 30;
+unsigned long cycletime = 1000;
+unsigned long offtime = 100;
 unsigned long lastCycle;
 
 
