@@ -11,7 +11,7 @@ void StickComplete();
 void SingleComplete();
 
 Accel accel(ACCEL_INTERVAL_MS);
-NeoPatterns Stick(30, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
+NeoPatterns Stick(1, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 
 bool DirectionalThreshold;  //whether the compass threshold can be used
@@ -34,6 +34,7 @@ void setup()
     
     //setup the stick with red
     Stick.Scanner(Stick.Color(255,0,0), 200);
+    Single.RainbowCycle(ACCEL_INTERVAL_MS);
 }
 
 // Main loop
@@ -71,7 +72,7 @@ void loop()
       if(Stick.ActivePattern != HALFUPDOWN)
       {
         Stick.HalfUpDown(Stick.Color(0,255,255),500);
-      }
+      } 
     
       Stick.Update();
     }
