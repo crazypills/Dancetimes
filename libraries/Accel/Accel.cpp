@@ -155,7 +155,16 @@ void Accel::computeFht(float lastValue) {
     }
     _old_phase = phase;
     _old_max_index = maxIndex;
-    _phase_avg = ((_phase_avg + _phaseRateAverage) * 19 + phase) / 20;
+
+    _phase_avg += _phaseRateAverage;
+    if (_phase_avg < -PI) {
+        _phase_avg += PI;
+    } else if (_phase_avg >= PI) {
+        _phase_avg -= PI;
+    }
+    _phase_avg = (_phase_avg * 19 + phase) / 20;
+    Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
+    Serial.print("Phase Avg: "); Serial.println(_phase_avg);
     //for (int i = 0; i < FHT_N; i++) {
     //	  fht_input[i] = (int) old_fht[0];
     //}
