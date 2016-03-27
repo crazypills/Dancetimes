@@ -14,10 +14,10 @@ void NeoPatterns::Update()
 	  Serial.println("ERROR: We didn't update lights in time.");
 	  Serial.print(Interval);
   }
-  if ((millis() - lastUpdate) > Interval) // time to update
-  {
-	
-	lastUpdate = millis();
+  if ((millis() - lastUpdate) < Interval) {
+      return;
+  }
+  lastUpdate = millis();
     switch (ActivePattern)
     {
       case RAINBOW_CYCLE:
@@ -59,7 +59,6 @@ void NeoPatterns::Update()
       default:
 		break;
     }
-  }
   
 }
 
@@ -69,13 +68,13 @@ NeoPatterns::Increment()
 {
   if (Direction == FORWARD)
   {
-	  floatIndex += floatIndexRate;
-	  if (floatIndex > 1) {
-		  floatIndex -= 1;
-		  OnComplete();
-	  }
-    //Index++;
-	Index = (int) (TotalSteps * floatIndex);
+      floatIndex += floatIndexRate;
+      if (floatIndex > 1) {
+          floatIndex -= 1;
+          OnComplete();
+      }
+      //Index++;
+      Index = (int) (TotalSteps * floatIndex);
     if (Index >= TotalSteps)
     {
       Index = 0;
@@ -542,8 +541,15 @@ NeoPatterns::Wheel(byte WheelPos)
 }
 
 void
-NeoPatterns::SetIndex(float percentage)
-{
-	floatIndex = percentage;
-	Index = percentage * TotalSteps;
+NeoPatterns::SetIndex(float percentage, float percentageRate) {
+    if (OnComplete != NULL && percentage < floatIndex && floatIndex + 2*percentageRate > 1) {
+        OnComplete();
+    }
+
+    //Serial.print("perc: "); Serial.println(percentage);
+    //Serial.print("percrate: "); Serial.println(percentageRate);
+
+    floatIndexRate = 0;
+    floatIndex = percentage;
+    Index = percentage * TotalSteps;
 }

@@ -31,7 +31,7 @@ protected:
 		float getPhase();
 		float getPhasePercentage();
 		bool directionalThreshold();
-		float getPhaseRate();
+		float getPhaseRatePercentage();
 };
 
 #endif // ACCEL_H

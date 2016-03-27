@@ -6,7 +6,7 @@
 #include <FHT.h>
 
 #define MOVING_AVERAGE_INTERVALS 50
-#define ACCEL_THRESHOLD 2
+#define ACCEL_THRESHOLD 1
 #define COMPASS_AVERAGE_INTERVALS 100
 #define ACCELEROMETER_CALIBRATE 0
 
@@ -133,7 +133,7 @@ void Accel::computeFht(float lastValue) {
             maxIndex = i;
         }
     }
-    Serial.print("Index: "); Serial.print(maxIndex); Serial.print("  val: "); Serial.println(max);
+    // Serial.print("Index: "); Serial.print(maxIndex); Serial.print("  val: "); Serial.println(max);
     int k = maxIndex;
     int negK = FHT_N - 1 - k;
     int realPlusImg = fht_input[k];
@@ -141,7 +141,7 @@ void Accel::computeFht(float lastValue) {
 
     //float phase = atan2((fht_input[k]	 - fht_input[negK]), (fht_input[k] + fht_input[negK]));
     float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg);
-    Serial.print("Phase: "); Serial.println(phase);
+    // Serial.print("Phase: "); Serial.println(phase);
     if (maxIndex == _old_max_index && maxIndex != 0) {
         float _phaseDiff = phase - _old_phase;
         if (_phaseDiff < 0) {
@@ -170,8 +170,8 @@ void Accel::computeFht(float lastValue) {
         _phase_avg -= 2*PI;
     }
 
-    Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
-    Serial.print("Phase Avg: "); Serial.println(_phase_avg);
+    // Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
+    // Serial.print("Phase Avg: "); Serial.println(_phase_avg);
     //for (int i = 0; i < FHT_N; i++) {
     //	  fht_input[i] = (int) old_fht[0];
     //}
@@ -182,7 +182,7 @@ float Accel::getPhase() {
 }
 
 float Accel::getPhasePercentage() {
-    return (_phase_avg * PI)/(2*PI);
+    return (_phase_avg + PI)/(2*PI);
 }
 
 long Accel::GetCompassReading()
@@ -195,7 +195,7 @@ bool Accel::isDancing()
     return _isDancing;
 }
 
-float Accel::getPhaseRate()
+float Accel::getPhaseRatePercentage()
 {
-    return _phaseRateAverage;
+    return _phaseRateAverage/(2*PI);
 }

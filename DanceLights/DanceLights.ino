@@ -3,7 +3,7 @@
 #include <Accel.h>
 
 
-#define ACCEL_INTERVAL_MS 10
+#define ACCEL_INTERVAL_MS 100
 
 // Define some NeoPatterns for the two rings and the stick
 //  as well as some completion routines
@@ -25,16 +25,16 @@ void setup()
 
    pinMode(10, INPUT_PULLUP);
    pinMode(9, INPUT_PULLUP);
-    
+      
     // Initialize all the pixelStrips
    Stick.begin();
    Single.begin();
     //Single.ActivePattern = RAINBOW_CYCLE;
-	accel.begin();
+	 accel.begin();
     
     //setup the stick with red
     Stick.Scanner(Stick.Color(255,0,0), 200);
-    Single.RainbowCycle(ACCEL_INTERVAL_MS);
+    Single.Running(Stick.Color(255,0,0), ACCEL_INTERVAL_MS);
 }
 
 // Main loop
@@ -43,12 +43,12 @@ void loop()
     // Read the sensors
     
     // Update the rings.
-    Single.Update();    
+    // Single.Update();    
 	  accel.Update();
 
     if (accel.isDancing())
     {
-      Single.SetIndex(accel.getPhasePercentage());
+      Single.SetIndex(accel.getPhasePercentage(), accel.getPhaseRatePercentage());
       Single.Update();
       //Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
@@ -80,7 +80,7 @@ void loop()
     }
     else
     { 
-      Single.Update();
+      //Single.Update();
       if(Stick.ActivePattern != SCANNER)
       {
         Stick.Scanner(Stick.Color(0,255,0),70);
@@ -163,5 +163,5 @@ void StickComplete()
 void SingleComplete()
 {
     // Random color change for next scan
-    //Stick.Color1 = Stick.Wheel(random(255));
+    Single.Color1 = Stick.Wheel(random(255));
 }
