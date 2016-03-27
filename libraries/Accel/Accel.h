@@ -25,7 +25,7 @@ protected:
 	public:
 		Accel(uint32_t intervalMS);
 		bool begin();		// Convention for this funciton is lower case...not sure why
-		void Update();
+		bool Update();
 		long GetCompassReading();
 		bool isDancing();
 		float getPhase();

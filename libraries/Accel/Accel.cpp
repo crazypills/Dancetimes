@@ -20,7 +20,7 @@ bool Accel::begin()
     // Try to initialise and warn if we couldn't detect the chip
     if (!_lsm.begin())
     {
-      Serial.println("Oops ... unable to initialize the LSM303. Check your wiring!");
+      Serial.println("Oops ... unable to initialize the LSM. Check your wiring!");
       while (1);
     }
     _lsm.setupAccel(_lsm.LSM9DS0_ACCELRANGE_4G);
@@ -29,15 +29,15 @@ bool Accel::begin()
     return true;
 }
 
-void
+bool
 Accel::Update()
 {
     float currentCompass = 0;
-    if ( millis() - _lastUpdateMS > _intervalMS * 2) {
-        Serial.println("ERROR: We didn't update in time.");
+    if ( millis() - _lastUpdateMS > _intervalMS + 10) {
+        Serial.println("ERROR: We didn't update accel in time.");
     }
     if ( millis() - _lastUpdateMS < _intervalMS) {
-        return;
+        return false;
     }
     _lastUpdateMS = millis();
 
@@ -104,6 +104,8 @@ Accel::Update()
 
     //Convert float to int
     _compassReading = (int)_compassAvg;
+
+    return true;
 }
 
 void Accel::computeFht(float lastValue) {

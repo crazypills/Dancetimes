@@ -3,7 +3,7 @@
 #include <Accel.h>
 
 
-#define ACCEL_INTERVAL_MS 20
+#define ACCEL_INTERVAL_MS 50
 
 // Define some NeoPatterns for the two rings and the stick
 //  as well as some completion routines
@@ -34,7 +34,7 @@ void setup()
     
     //setup the stick with red
     Stick.Scanner(Stick.Color(255,0,0), 200);
-    Single.Running(Stick.Color(255,0,0), ACCEL_INTERVAL_MS);
+    Single.Running(Stick.Color(0x1f,0,0), ACCEL_INTERVAL_MS);
 }
 
 // Main loop
@@ -44,7 +44,10 @@ void loop()
     
     // Update the rings.
     // Single.Update();    
-	  accel.Update();
+	  bool didUpdate = accel.Update();
+    if (!didUpdate) {
+      return; 
+    }
 
     if (accel.isDancing())
     {
@@ -57,7 +60,7 @@ void loop()
         Stick.Follower(Stick.Color(0,255,0),40,2);
       }
     
-      Stick.Update();
+      //Stick.Update();
     }
     else if (digitalRead(9) == LOW)
     {
@@ -80,13 +83,13 @@ void loop()
     }
     else
     { 
-      //Single.Update();
+      Single.Update();
       if(Stick.ActivePattern != SCANNER)
       {
         Stick.Scanner(Stick.Color(0,255,0),70);
       }
     //Stick.Interval = 20;
-      Stick.Update();
+      //Stick.Update();
     }
     /*
     // Switch patterns on a button press:
@@ -163,6 +166,6 @@ void StickComplete()
 void SingleComplete()
 {
     // Random color change for next scan
-    Single.Color1 = Stick.Wheel(random(255));
+    Single.Color1 = Stick.Wheel(random(255)) & 0x1f1f1f1f;
     //Serial.println("callback: ");
 }

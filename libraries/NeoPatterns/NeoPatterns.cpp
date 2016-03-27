@@ -10,9 +10,8 @@ NeoPatterns::NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*call
 // Update the pattern
 void NeoPatterns::Update()
 {
-  if (millis() - lastUpdate > Interval * 2) {
-	  Serial.println("ERROR: We didn't update lights in time.");
-	  Serial.print(Interval);
+  if (millis() - lastUpdate > Interval + 10) {
+	  Serial.print("ERROR: We didn't update lights in time: "); Serial.println(Interval);
   }
   if ((millis() - lastUpdate) < Interval) {
       return;
@@ -543,7 +542,7 @@ NeoPatterns::Wheel(byte WheelPos)
 void
 NeoPatterns::SetIndex(float percentage, float percentageRate) {
     if (OnComplete != NULL && percentage < floatIndex && floatIndex + 2*percentageRate > 1) {
-        Serial.print("complete: "); Serial.println(percentage);
+        // Serial.print("complete: "); Serial.println(percentage);
         OnComplete();
     }
 
