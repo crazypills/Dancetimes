@@ -27,7 +27,7 @@ class NeoPatterns : public Adafruit_NeoPixel
     direction Direction;     // direction to run the pattern
    
     unsigned long Interval;   // milliseconds between updates
-    unsigned long lastUpdate; // last update of position
+    unsigned long LastUpdate; // last update of position
     
     uint32_t Color1, Color2;  // What colors are in use
     uint16_t TotalSteps;  // total number of steps in the pattern
@@ -37,6 +37,7 @@ class NeoPatterns : public Adafruit_NeoPixel
 	uint8_t Flicker = 3;
 	uint8_t Brightness;
 	uint8_t Sparkles;
+	uint8_t LastColors[24]= {0};
 	
 	float floatIndex;
 	float floatIndexRate;
@@ -116,6 +117,10 @@ class NeoPatterns : public Adafruit_NeoPixel
     // Input a value 0 to 255 to get a color value.
     // The colours are a transition r - g - b - back to r.
     uint32_t Wheel(byte WheelPos);
+	// Store the state of the LED strip
+	void StoreLights();
+	// Return the lights to the previous state
+	void RestoreLights();
 };
 
 #endif // ADAFRUIT_NEOPATTERN_H

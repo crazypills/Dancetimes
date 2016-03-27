@@ -1,5 +1,6 @@
 #include "Accel.h"
 
+
 #define LIN_OUT 0
 #define LOG_OUT 1
 #define FHT_N 256
@@ -31,7 +32,7 @@ Accel::Update()
 {
     float currentCompass = 0;
     if ( millis() - _lastUpdateMS > _intervalMS * 2) {
-        Serial.println("ERROR: We didn't update in time.");
+        //Serial.println("ERROR: We didn't update in time.");
     }
 
     if ( millis() - _lastUpdateMS > _intervalMS) 
@@ -65,8 +66,12 @@ Accel::Update()
 	  //Serial.print("avgAbsAccel: "); Serial.println(_avgAbsAccel);       Serial.print(" ");
 	  //Serial.print("currentAbsAccel: "); Serial.println(currentAbsAccel);       Serial.print(" ");
       //CompassReading will be a number between 0-255, normalized from serial inputs
-      float heading = atan2(magy, magx);
+	  //Serial.print("Gyro X: "); Serial.print(_lsm.gyroData.x);   Serial.print(" ");
+	  //Serial.print("Y: "); Serial.print(_lsm.gyroData.y);        Serial.print(" ");
+	  //Serial.print("Z: "); Serial.println(_lsm.gyroData.z);      Serial.println(" ");
+      float heading = atan2(_lsm.magData.y, _lsm.magData.x);
       
+	  
 	  //Serial.print("heading: "); Serial.println(heading);
       //Serial.print("orientation: "); Serial.println(_lsm.magData.orientation);
 
@@ -97,6 +102,7 @@ Accel::Update()
 
       //Convert float to int
       _compassReading = (int)_compassAvg;
+	  Serial.print("Compass Reading:  "); Serial.println(_compassReading);
     }
 }
 
@@ -156,7 +162,8 @@ long Accel::GetCompassReading()
 
 bool Accel::isDancing()
 {
-	return _isDancing;
+	//return _isDancing;
+	return false;
 }
 
 float Accel::getPhaseRate()

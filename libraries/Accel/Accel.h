@@ -2,11 +2,13 @@
 #define ACCEL_H
 
 #include <Adafruit_LSM303.h>
+#include <SPI.h>
+#include <Adafruit_LSM9DS0.h>
 
 class Accel
 {
 protected:
-		Adafruit_LSM303 _lsm;
+		Adafruit_LSM9DS0 _lsm = Adafruit_LSM9DS0();
 		uint32_t _lastUpdateMS;
 		uint32_t _intervalMS;
 		float _compassAvg;

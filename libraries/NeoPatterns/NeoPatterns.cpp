@@ -10,14 +10,14 @@ NeoPatterns::NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*call
 // Update the pattern
 void NeoPatterns::Update()
 {
-  if (millis() - lastUpdate > Interval * 2) {
+  if (millis() - LastUpdate > Interval * 2) {
 	  Serial.println("ERROR: We didn't update lights in time.");
 	  Serial.print(Interval);
   }
-  if ((millis() - lastUpdate) > Interval) // time to update
+  if ((millis() - LastUpdate) > Interval) // time to update
   {
 	
-	lastUpdate = millis();
+	LastUpdate = millis();
     switch (ActivePattern)
     {
       case RAINBOW_CYCLE:
@@ -546,4 +546,22 @@ NeoPatterns::SetIndex(float percentage)
 {
 	floatIndex = percentage;
 	Index = percentage * TotalSteps;
+}
+
+void
+NeoPatterns::StoreLights()
+{
+	for(int i = 0; i < numPixels(); i++)
+	{
+		LastColors[i]=getPixelColor(i);
+	}
+}
+
+void
+NeoPatterns::RestoreLights()
+{
+	for(int i=0; i < numPixels(); i++)
+	{
+		setPixelColor(i,LastColors[i]);
+	}	
 }
