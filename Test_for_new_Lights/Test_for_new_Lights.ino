@@ -9,15 +9,18 @@
 //  as well as some completion routines
 void StickComplete();
 void SingleComplete();
+void RingComplete();
+
 
 Accel accel(ACCEL_INTERVAL_MS);
 NeoPatterns Stick(30, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
+NeoPatterns Ring(24, 12, NEO_GRB + NEO_KHZ800, &RingComplete);
 
 bool DirectionalThreshold;  //whether the compass threshold can be used
 bool Dance;                 //whether accelerometer is dancing hard enought to be used
 bool Lighton;
-unsigned long cycletime = 300;
+unsigned long cycletime = 400;
 unsigned long offtime = 30;
 unsigned long lastCycle;
 
@@ -33,16 +36,20 @@ void setup()
     // Initialize all the pixelStrips
    Stick.begin();
    Single.begin();
+   Ring.begin();
     //Single.ActivePattern = RAINBOW_CYCLE;
-    Single.RainbowCycle(120, FORWARD);
+    Single.RainbowCycle(240, FORWARD);
     Single.setBrightness(50);
-	accel.begin();
+	  accel.begin();
+    Ring.setBrightness(127);
      Stick.setBrightness(255);
 
-    
+
+    lastCycle = millis();
     //setup the stick with red
     //Stick.Scanner(Stick.Color(255,0,0), 200);
     Stick.ColorSet(Stick.Color(255,0,0));
+    Ring.ColorSet(Ring.Color(0,255,0));
 }
 
 // Main loop
@@ -51,11 +58,22 @@ void loop()
     // Read the sensors
 
     // Update the rings.
-    Single.Update();    
+    //Single.Update();    
 	  accel.Update();
     //Stick.SetIndex((accel.getPhase()+PI)/(2*PI));
     //Stick.Interval=((int)((accel.getPhaseRate()+PI)/(2*PI) * 150));
 
+    if ( millis() - lastCycle > cycletime)
+    {
+      lastCycle = millis();
+      Ring.SetBlank(true);
+      Stick.SetBlank(true);
+    }
+    if (millis() - lastCycle > offtime)
+    {
+      Ring.SetBlank(false);
+      Stick.SetBlank(false);
+    }
     /*
     if (accel.getPhase() > 0)
     {
@@ -67,10 +85,12 @@ void loop()
     }
     */
     Stick.floatIndexRate = 1.0 / Stick.TotalSteps;
+    Ring.floatIndexRate = 1.0/ Ring.TotalSteps;
     if (accel.isDancing())
     {
       Single.ColorSet(Single.Wheel(random(255)));
-      //Stick.ColorSet(Stick.Color(255, 0, 0));
+      //Stick.ColorSet(Stick.Wheel(accel.GetCompassReading()));
+      Stick.ColorSet(Stick.Color(255, 0, 0));
       if(Stick.ActivePattern != HALFUPDOWN)
       {
         Stick.HalfUpDown(Stick.Color(0,255,0),10);
@@ -81,34 +101,55 @@ void loop()
     }
     else if (digitalRead(9) == LOW)
     {
+      //Stick.SetBlank(true);
+      if(Ring.ActivePattern != THEATER_CHASE)
+      {
+        Ring.TheaterChase(Ring.Color(255,0,255),Ring.Color(0,255,255),80,FORWARD);
+      }
+      
       if(Stick.ActivePattern != FOLLOWER)
       {
-        Stick.Follower(Stick.Color(255,0,255),200,5);
+        Stick.Follower(Stick.Color(255,0,255),50,5);
       }
+      Ring.Update();
       Stick.Update();
     }
     // Update the rings.
     //Single.ActivePattern = RAINBOW_CYCLE;
     else if (digitalRead(10) == LOW)
     {
-      if(Stick.ActivePattern != RAINBOW_CYCLE)
+      //Stick.SetBlank(false);
+      if(Ring.ActivePattern != HALFUPDOWN)
       {
-        Stick.RainbowCycle(30,FORWARD);
+        Ring.HalfUpDown(random(255),150);
       }
-    
+      if(Stick.ActivePattern != DOUBLESCANNER)
+      {
+        Stick.DoubleScanner(random(255),30);
+      }
+      Ring.Update();
       Stick.Update();
     }
     else
     { 
+//      Stick.SetBlank(false);
       Single.Update();
-      if(Stick.ActivePattern != DOUBLESCANNER)
+      if(Stick.ActivePattern != RUNNINGRAINBOW)
       {
         //Stick.Fade(Stick.Color(255,0,0),Stick.Color(0,255,255),120,50,FORWARD);
-        Stick.DoubleScanner(Stick.Wheel(random(255)),50);
-        
+        Stick.RunningRainbow(Stick.Wheel(random(255)),150);
+        //Stick.TheaterChase(Stick.Color(0,255,255),Stick.Color(255,0,255), 250 , FORWARD);
+        //Stick.HalfUpDown(Stick.Color(0,255,255),40);
+        //Stick.ColorWipe(Stick.Color(0,255,255),20,FORWARD);
+        //Stick.Scanner(Stick.Color(0,255,255),40);
+      }
+      if(Ring.ActivePattern != RAINBOW_CYCLE)
+      {
+        Ring.RainbowCycle(20, FORWARD);
       }
     //Stick.Interval = 20;
       Stick.Update();
+      Ring.Update();
     }
     /*
     // Switch patterns on a button press:
@@ -187,3 +228,15 @@ void SingleComplete()
     // Random color change for next scan
     //Stick.Color1 = Stick.Wheel(random(255));
 }
+void RingComplete()
+{
+  if (Stick.ActivePattern == HALFUPDOWN)
+    {
+      Stick.Color1 = Stick.Wheel(random(255));
+      Stick.clear();
+      Stick.show();
+    }
+    Ring.Color1 = Stick.Wheel(random(255));
+}
+
+

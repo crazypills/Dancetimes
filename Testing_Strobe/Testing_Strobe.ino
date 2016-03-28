@@ -1,3 +1,4 @@
+
 #include <NeoPatterns.h>
 #include <Wire.h>
 #include <Accel.h>
@@ -11,14 +12,14 @@ void StickComplete();
 void SingleComplete();
 
 Accel accel(ACCEL_INTERVAL_MS);
-NeoPatterns Stick(20, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
+NeoPatterns Stick(24, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 
 bool DirectionalThreshold;  //whether the compass threshold can be used
 bool Dance;                 //whether accelerometer is dancing hard enought to be used
 bool Lighton;
-unsigned long cycletime = 100;
-unsigned long offtime = 40;
+unsigned long cycletime = 1000;
+unsigned long offtime = 100;
 unsigned long lastCycle;
 
 
@@ -37,6 +38,7 @@ void setup()
     Single.RainbowCycle(10, FORWARD);
     Single.setBrightness(50);
 	accel.begin();
+  Stick.setBrightness(127);
 
     
     //setup the stick with red
@@ -59,7 +61,7 @@ void loop()
   if ((millis() - lastCycle) > cycletime) // time to update
   {
     lastCycle = millis();
-    Stick.ColorSet(Stick.Color(255,255,0));
+    Stick.ColorSet(Stick.Color(255,63,255));
     Stick.show();
     Lighton = true;
     //Serial.println("This should be stick on");

@@ -3,20 +3,30 @@
 NeoPatterns::NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)())
   : Adafruit_NeoPixel(pixels, pin, type)
 {
+  LastColors = (uint8_t *)malloc(pixels);
   OnComplete = callback;
   floatIndexRate = 1;
+  BlankState = false;
 }
 
 // Update the pattern
 void NeoPatterns::Update()
 {
-  if (millis() - lastUpdate > Interval + 10) {
-	  Serial.print("ERROR: We didn't update lights in time: "); Serial.println(Interval);
+  if (millis() - LastUpdate > Interval * 2) {
+	  Serial.println("ERROR: We didn't update lights in time.");
+	  Serial.print(Interval);
   }
-  if ((millis() - lastUpdate) < Interval) {
-      return;
-  }
-  lastUpdate = millis();
+  
+  // // Short circuit if the blank state is set
+  // if ( BlankState == true )
+  // {
+  //   return;
+  // }
+  
+  if ((millis() - LastUpdate) > Interval) // time to update
+  {
+	
+	LastUpdate = millis();
     switch (ActivePattern)
     {
       case RAINBOW_CYCLE:
@@ -58,7 +68,27 @@ void NeoPatterns::Update()
       default:
 		break;
     }
-  
+  }
+}
+
+void
+NeoPatterns::SetBlank(bool blank)
+{
+  if ( BlankState != blank ) 
+  { 
+    if ( blank == true ) 
+    { 
+      StoreLights(); 
+      ColorSet(0);
+      show(); 
+    } 
+    else 
+    {
+      RestoreLights();
+    } 
+    // Update the state. This has to happen after ColorSet
+    BlankState = blank;
+  }
 }
 
 // Increment the Index and reset at the end
@@ -517,6 +547,24 @@ NeoPatterns::Blue(uint32_t color)
   return color & 0xFF;
 }
 
+uint32_t
+NeoPatterns::setRed(uint8_t red)
+{
+  return red << 16;
+}
+
+uint32_t
+NeoPatterns::setGreen(uint8_t green)
+{
+  return green << 8;
+}
+
+uint32_t
+NeoPatterns::setBlue(uint8_t blue)
+{
+  return blue;
+}
+
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
 uint32_t
@@ -552,4 +600,58 @@ NeoPatterns::SetIndex(float percentage, float percentageRate) {
     floatIndexRate = 0;
     floatIndex = percentage;
     Index = percentage * TotalSteps;
+}
+
+void
+NeoPatterns::StoreLights()
+{
+	for(int i = 0; i < numPixels(); i++)
+	{
+		LastColors[i]=getPixelColor(i);
+	}
+}
+
+void
+NeoPatterns::RestoreLights()
+{
+	for(int i=0; i < numPixels(); i++)
+	{
+		setPixelColor(i,LastColors[i]);
+	}	
+}
+
+void
+NeoPatterns::setPixelColor(uint16_t n, uint32_t c)
+{
+  if ( BlankState )
+  {
+    LastColors[n] = c;
+  }
+  else
+    Adafruit_NeoPixel::setPixelColor(n, c);
+}
+
+void
+NeoPatterns::setPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b)
+{
+  if ( BlankState )
+  {
+    uint32_t color = 0;
+    uint8_t brightness = Adafruit_NeoPixel::getBrightness();
+    // attenuate rgb by brightness
+    r = (r * brightness) >> 8;
+    g = (g * brightness) >> 8;
+    b = (b * brightness) >> 8;
+    
+    color |= setRed(r);
+    color |= setGreen(g);
+    color |= setBlue(b);
+    
+    LastColors[n] = color;
+  }
+  else
+  {
+    Adafruit_NeoPixel::setPixelColor(n, r, g ,b);
+  }
+  
 }
