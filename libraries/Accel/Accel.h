@@ -2,6 +2,7 @@
 #define ACCEL_H
 
 #include <Adafruit_LSM9DS0.h>
+#include "quaternion.h"
 
 class Accel
 {
