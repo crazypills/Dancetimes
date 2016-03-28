@@ -23,6 +23,7 @@ protected:
 		float _phase_avg;
 		float _old_max_index;
 		float _phaseRateAverage;
+                Quaternion _q;
 	public:
 		Accel(uint32_t intervalMS);
 		bool begin();		// Convention for this funciton is lower case...not sure why
