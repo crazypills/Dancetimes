@@ -11,6 +11,9 @@ protected:
 public:
     Quaternion() {a = 1; b = c = d = 0;}
 
+    // This is a vector that can be rotated in Quaternion space.
+    Quaternion(int x, int y, int z) {a = 0; b = x; c = y; d = z;}
+
     Quaternion & operator=(const Quaternion &rhs) {
         a = rhs.a;
         b = rhs.b;
@@ -21,10 +24,13 @@ public:
 
     // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/arithmetic/index.htm
     Quaternion & operator*=(const Quaternion &q);
+    Quaternion & operator*=(const float &scale);
     const Quaternion operator* (const Quaternion& q) const { return Quaternion(*this) *= q; }
+    const Quaternion operator* (const float& scale) const { return Quaternion(*this) *= scale; }
     void normalize();
-    Quaternion conj() const;
+    const Quaternion conj() const;
     void from_euler_rotation(float x, float y, float z);
+    void rotate(float &x, float y, float &z) const;
 };
 
 #endif

@@ -16,6 +16,14 @@ Quaternion & Quaternion::operator*=(const Quaternion &q) {
     return (*this = ret);
 }
 
+Quaternion & Quaternion::operator*=(const float &scale) {
+    a *= scale;
+    b *= scale;
+    c *= scale;
+    d *= scale;
+    return *this;
+}
+
 void Quaternion::normalize() {
     float norm2 = a*a + b*b + c*c + d*d;
     float norm = sqrt(norm2);
@@ -33,7 +41,20 @@ void Quaternion::from_euler_rotation(float x, float y, float z) {
     normalize();
 }
 
-const Quaternion conj() {
-    Quaternion ret;
+const Quaternion Quaternion::conj() const {
+    Quaternion ret(*this);
+    ret.b *= -1;
+    ret.c *= -1;
+    ret.d *= -1;
+    return ret;
+}
+
+void Quaternion::rotate(float &x, float y, float &z) const {
+    Quaternion toRotate(x, y, z);
+
+    toRotate = (*this) * toRotate * conj();
+    x = toRotate.b;
+    y = toRotate.c;
+    z = toRotate.d;
 }
 

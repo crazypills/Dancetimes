@@ -5,10 +5,12 @@
 #define FHT_N 128
 #include <FHT.h>
 
-#define MOVING_AVERAGE_INTERVALS 50
+#define MOVING_AVERAGE_INTERVALS 20
 #define ACCEL_THRESHOLD 1
-#define COMPASS_AVERAGE_INTERVALS 100
+#define COMPASS_AVERAGE_INTERVALS 10
 #define ACCELEROMETER_CALIBRATE 0
+#define MAG_CALIBRATE_X 0.7
+#define MAG_CALIBRATE_Y -0.5
 
 Accel::Accel(uint32_t intervalMS)
 {
@@ -25,6 +27,7 @@ bool Accel::begin()
     }
     _lsm.setupAccel(_lsm.LSM9DS0_ACCELRANGE_4G);
     _lsm.setupMag(_lsm.LSM9DS0_MAGGAIN_4GAUSS);
+    _lsm.setupGyro(_lsm.LSM9DS0_GYROSCALE_500DPS);
 	
     return true;
 }
@@ -50,18 +53,18 @@ Accel::Update()
     float x = accelEvent.acceleration.x;
     float y = accelEvent.acceleration.y;
     float z = accelEvent.acceleration.z;
-    float magx = magEvent.magnetic.x;
-    float magy = magEvent.magnetic.y;
+    float magx = magEvent.magnetic.x + MAG_CALIBRATE_X;
+    float magy = magEvent.magnetic.y + MAG_CALIBRATE_Y;
     float magz = magEvent.magnetic.z;
-    //Serial.print("Accel X: "); Serial.print(accelEvent.acceleration.x);     Serial.print(" ");
-    //Serial.print("Y: "); Serial.print(accelEvent.acceleration.y);  Serial.print(" ");
-    //Serial.print("Z: "); Serial.println(accelEvent.acceleration.z);
-    //Serial.print("Mag X: "); Serial.print(magx);     Serial.print(" ");
-    //Serial.print("Y: "); Serial.print(magy);  Serial.print(" ");
-    //Serial.print("Z: "); Serial.println(magz);
-    //Serial.print("Gyro X: "); Serial.print(gyroEvent.gyro.x);     Serial.print(" ");
-    //Serial.print("Y: "); Serial.print(gyroEvent.gyro.y);  Serial.print(" ");
-    //Serial.print("Z: "); Serial.println(gyroEvent.gyro.z);
+    // Serial.print("Accel X: "); Serial.print(accelEvent.acceleration.x);     Serial.print(" ");
+    // Serial.print("Y: "); Serial.print(accelEvent.acceleration.y);  Serial.print(" ");
+    // Serial.print("Z: "); Serial.println(accelEvent.acceleration.z);
+    // Serial.print("Mag X: "); Serial.print(magx);     Serial.print(" ");
+    // Serial.print("Y: "); Serial.print(magy);  Serial.print(" ");
+    // Serial.print("Z: "); Serial.println(magz);
+    // Serial.print("Gyro X: "); Serial.print(gyroEvent.gyro.x);     Serial.print(" ");
+    // Serial.print("Y: "); Serial.print(gyroEvent.gyro.y);  Serial.print(" ");
+    // Serial.print("Z: "); Serial.println(gyroEvent.gyro.z);
     float currentAccel = sqrt(x*x + y*y + z*z) - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
     float currentAbsAccel = abs(currentAccel);
     computeFht(currentAccel);
@@ -100,7 +103,7 @@ Accel::Update()
     } else if (_compassAvg >= 360) {
         _compassAvg -= 360;
     }
-    // Serial.print("compasAvg: "); Serial.println(_compassAvg);
+    Serial.print("compasAvg: "); Serial.println(_compassAvg);
 
     //Convert float to int
     _compassReading = (int)_compassAvg;
