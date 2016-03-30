@@ -28,6 +28,7 @@ public:
     const Quaternion operator-(const Quaternion& q) const { return Quaternion(*this) -= q; }
     Quaternion & operator*=(const float &scale);
     const Quaternion operator*(const float& scale) const { return Quaternion(*this) *= scale; }
+    const float norm() const;
     Quaternion & normalize();
     const Quaternion conj() const;
     Quaternion & from_euler_rotation(float x, float y, float z);
