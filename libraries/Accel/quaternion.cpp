@@ -42,6 +42,8 @@ Quaternion & Quaternion::normalize() {
     return *this;
 }
 
+// This method takes an euler rotation in rad and converts it to an equivilent 
+// Quaternion rotation.
 Quaternion & Quaternion::from_euler_rotation(float x, float y, float z) {
     float c1 = cos(y/2);
     float c2 = cos(z/2);
@@ -66,6 +68,10 @@ const Quaternion Quaternion::conj() const {
 }
 
 // http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/
+    // This method takes two vectors and computes the rotation vector between them.
+    // Both the left and right hand sides must be pure vectors (a == 0)
+    // Both the left and right hand sides must normalized already.
+    // This computes the rotation that will tranform this to q.
 const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const {
     // w = 1 + v1•v2
     // x = (v1 x v2).x 
@@ -84,10 +90,15 @@ const float Quaternion::dot_product(const Quaternion& q) const {
     return a * q.a + b * q.b + c * q.c + d * q.d;
 }
 
+// This will roate the input vector by this normalized rotation quaternion.
 const Quaternion Quaternion::rotate(const Quaternion& q) const {
     return (*this) * q * conj();
 }
 
+// This modifies this normalized rotation quaternion and makes it 
+// rotate between 0-1 as much as it would normally rotate.
+// The math here is pretty sloppy but should work for 
+// most cases.
 Quaternion & Quaternion::frational(const float& f) {
     a = 1-f + f*a;
     b *= f;
@@ -95,5 +106,4 @@ Quaternion & Quaternion::frational(const float& f) {
     d *= f;
     return normalize();
 }
-
 
