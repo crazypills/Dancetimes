@@ -2,13 +2,12 @@
 #define QUATERNION_H
 
 class Quaternion {
-protected:
+public:
     float a;
     float b;
     float c;
     float d;
 
-public:
     Quaternion() {a = 1; b = c = d = 0;}
 
     // This is a vector that can be rotated in Quaternion space.
@@ -24,13 +23,24 @@ public:
 
     // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/arithmetic/index.htm
     Quaternion & operator*=(const Quaternion &q);
-    Quaternion & operator*=(const float &scale);
     const Quaternion operator* (const Quaternion& q) const { return Quaternion(*this) *= q; }
-    const Quaternion operator* (const float& scale) const { return Quaternion(*this) *= scale; }
-    void normalize();
+    Quaternion & operator-=(const Quaternion &q);
+    const Quaternion operator-(const Quaternion& q) const { return Quaternion(*this) -= q; }
+    Quaternion & operator*=(const float &scale);
+    const Quaternion operator*(const float& scale) const { return Quaternion(*this) *= scale; }
+    Quaternion & normalize();
     const Quaternion conj() const;
-    void from_euler_rotation(float x, float y, float z);
-    void rotate(float &x, float y, float &z) const;
+    Quaternion & from_euler_rotation(float x, float y, float z);
+    // This method takes two vectors and computes the rotation vector between them.
+    // Both the left and right hand sides must be pure vectors (a == 0)
+    // Both the left and right hand sides must normalized already.
+    // This computes the rotation that will tranform this to q.
+    const Quaternion rotation_between_vectors(const Quaternion& q) const;
+    const float dot_product(const Quaternion& q) const;
+
+    // This method takes one vector and rotates it using this Quaternion.
+    // The input must be a pure vector (a == 0)
+    const Quaternion rotate(const Quaternion& q) const;
 };
 
 #endif

@@ -1,9 +1,6 @@
 #include "Accel.h"
 
-
-#define LIN_OUT 0
 #define LOG_OUT 1
-#define FHT_N 128
 #include <FHT.h>
 
 #define MOVING_AVERAGE_INTERVALS 20
@@ -69,10 +66,38 @@ Accel::Update()
     Serial.print("Gyro X: "); Serial.print(gyrox);     Serial.print(" ");
     Serial.print("Y: "); Serial.print(gyroy);  Serial.print(" ");
     Serial.print("Z: "); Serial.println(gyroz);
+
     Quaternion rotate;
     rotate.from_euler_rotation(gyrox, gyroy, gyroz);
-    // _q = rotate * _q * rotate.conj();
-    _q *= rotate;
+    _q *= Quaternion().from_euler_rotation(gyrox, gyroy, gyroz);
+    Quaternion gravity(x, y, z);
+    gravity.normalize();
+    Quaternion expected_gravity(0, 0, 1);
+    expected_gravity = _q.rotate(expected_gravity);
+
+    Serial.print("expected W: "); Serial.print(expected_gravity.a);
+    Serial.print(" X: "); Serial.print(expected_gravity.b);
+    Serial.print(" Y: "); Serial.print(expected_gravity.c);
+    Serial.print(" Z: "); Serial.println(expected_gravity.d);
+
+    Serial.print("gravity W: "); Serial.print(gravity.a);
+    Serial.print(" X: "); Serial.print(gravity.b);
+    Serial.print(" Y: "); Serial.print(gravity.c);
+    Serial.print(" Z: "); Serial.println(gravity.d);
+
+    Quaternion toRotate = expected_gravity.rotation_between_vectors(gravity);
+    Serial.print("toRot W: "); Serial.print(toRotate.a);
+    Serial.print(" X: "); Serial.print(toRotate.b);
+    Serial.print(" Y: "); Serial.print(toRotate.c);
+    Serial.print(" Z: "); Serial.println(toRotate.d);
+
+    expected_gravity = toRotate.rotate(expected_gravity);
+
+    Serial.print("expecty W: "); Serial.print(expected_gravity.a);
+    Serial.print(" X: "); Serial.print(expected_gravity.b);
+    Serial.print(" Y: "); Serial.print(expected_gravity.c);
+    Serial.print(" Z: "); Serial.println(expected_gravity.d);
+
     float currentAccel = sqrt(x*x + y*y + z*z) - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
     float currentAbsAccel = abs(currentAccel);
     computeFht(currentAccel);
@@ -111,7 +136,7 @@ Accel::Update()
     } else if (_compassAvg >= 360) {
         _compassAvg -= 360;
     }
-    Serial.print("compasAvg: "); Serial.println(_compassAvg);
+    //Serial.print("compasAvg: "); Serial.println(_compassAvg);
 
     //Convert float to int
     _compassReading = (int)_compassAvg;

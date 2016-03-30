@@ -16,6 +16,14 @@ Quaternion & Quaternion::operator*=(const Quaternion &q) {
     return (*this = ret);
 }
 
+Quaternion & Quaternion::operator-=(const Quaternion &q) {
+    a -= q.a;
+    b -= q.b;
+    c -= q.c;
+    d -= q.d;
+    return *this;
+}
+
 Quaternion & Quaternion::operator*=(const float &scale) {
     a *= scale;
     b *= scale;
@@ -24,21 +32,23 @@ Quaternion & Quaternion::operator*=(const float &scale) {
     return *this;
 }
 
-void Quaternion::normalize() {
+Quaternion & Quaternion::normalize() {
     float norm2 = a*a + b*b + c*c + d*d;
     float norm = sqrt(norm2);
     a /= norm;
     b /= norm;
     c /= norm;
     d /= norm;
+    return *this;
 }
 
-void Quaternion::from_euler_rotation(float x, float y, float z) {
+Quaternion & Quaternion::from_euler_rotation(float x, float y, float z) {
     a = cos(x/2) * cos(y/2) * cos(z/2) + sin(x/2) * sin(y/2) * sin(z/2);
     b = sin(x/2) * cos(y/2) * cos(z/2) - cos(x/2) * sin(y/2) * sin(z/2);
     c = cos(x/2) * sin(y/2) * cos(z/2) + sin(x/2) * cos(y/2) * sin(z/2);
     d = cos(x/2) * cos(y/2) * sin(z/2) - sin(x/2) * sin(y/2) * cos(z/2);
     normalize();
+    return *this;
 }
 
 const Quaternion Quaternion::conj() const {
@@ -49,12 +59,27 @@ const Quaternion Quaternion::conj() const {
     return ret;
 }
 
-void Quaternion::rotate(float &x, float y, float &z) const {
-    Quaternion toRotate(x, y, z);
-
-    toRotate = (*this) * toRotate * conj();
-    x = toRotate.b;
-    y = toRotate.c;
-    z = toRotate.d;
+// http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/
+const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const {
+    // w = 1 + v1•v2
+    // x = (v1 x v2).x 
+    // y = (v1 x v2).y
+    // z = (v1 x v2).z
+    Quaternion ret;
+    ret.a = 1 + b * q.b + c * q.c + d * q.d;
+    ret.b = c * q.d - d * q.c;
+    ret.c = d * q.b - b * q.d;
+    ret.d = b * q.c - c * q.b;
+    ret.normalize();
+    return ret;
 }
+
+//const float Quaternion::dot_product(const Quaternion& q) const {
+//    return a * q.a + b * q.b + c * q.c + d * q.d;
+//}
+
+const Quaternion Quaternion::rotate(const Quaternion& q) const {
+    return (*this) * q * conj();
+}
+
 

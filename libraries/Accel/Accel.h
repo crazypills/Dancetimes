@@ -1,6 +1,8 @@
 #ifndef ACCEL_H
 #define ACCEL_H
 
+#define FHT_N 256
+
 #include <Adafruit_LSM9DS0.h>
 #include "quaternion.h"
 
@@ -18,7 +20,7 @@ protected:
 		float _avgAbsAccel;
 		bool _isDancing;
 		void computeFht(float newValue);
-		int _old_fht[128];
+		int _old_fht[FHT_N];
 		float _old_phase;
 		float _phase_avg;
 		float _old_max_index;
