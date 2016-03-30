@@ -80,15 +80,15 @@ Accel::Update()
 
     Quaternion expected_gravity(0, 0, 1);
     expected_gravity = _q.rotate(expected_gravity);
-    Serial.print("expected W: "); Serial.print(expected_gravity.a);
-    Serial.print(" X: "); Serial.print(expected_gravity.b);
-    Serial.print(" Y: "); Serial.print(expected_gravity.c);
-    Serial.print(" Z: "); Serial.println(expected_gravity.d);
+    // Serial.print("expected W: "); Serial.print(expected_gravity.a);
+    // Serial.print(" X: "); Serial.print(expected_gravity.b);
+    // Serial.print(" Y: "); Serial.print(expected_gravity.c);
+    // Serial.print(" Z: "); Serial.println(expected_gravity.d);
 
-    Serial.print("gravity W: "); Serial.print(gravity.a);
-    Serial.print(" X: "); Serial.print(gravity.b);
-    Serial.print(" Y: "); Serial.print(gravity.c);
-    Serial.print(" Z: "); Serial.println(gravity.d);
+    // Serial.print("gravity W: "); Serial.print(gravity.a);
+    // Serial.print(" X: "); Serial.print(gravity.b);
+    // Serial.print(" Y: "); Serial.print(gravity.c);
+    // Serial.print(" Z: "); Serial.println(gravity.d);
 
     Quaternion toRotate = expected_gravity.rotation_between_vectors(gravity);
     // Serial.print("toRot W: "); Serial.print(toRotate.a);
@@ -104,7 +104,7 @@ Accel::Update()
     // Serial.print(" Y: "); Serial.print(expected_gravity.c);
     // Serial.print(" Z: "); Serial.println(expected_gravity.d);
 
-    //_q = toRotate.frational(0.1) * _q;
+    _q = toRotate.fractional(0.1) * _q;
 
     float currentAccel = sqrt(x*x + y*y + z*z) - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
     float currentAbsAccel = abs(currentAccel);
