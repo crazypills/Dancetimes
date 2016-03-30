@@ -48,15 +48,15 @@ Accel::Update()
     //sensors_event_t tempEvent;
     _lsm.getEvent(&accelEvent, &magEvent, &gyroEvent, NULL);
 
-    float x = accelEvent.acceleration.x;
-    float y = accelEvent.acceleration.y;
-    float z = accelEvent.acceleration.z;
     float magx = magEvent.magnetic.x + MAG_CALIBRATE_X;
     float magy = magEvent.magnetic.y + MAG_CALIBRATE_Y;
     float magz = magEvent.magnetic.z;
+
+    // Gyro is in degrees per second, so we change to rads and mult by dt
     float gyrox = gyroEvent.gyro.x * PI/180.0 * ACCEL_INTERVAL_MS / 1000;
     float gyroy = gyroEvent.gyro.y * PI/180.0 * ACCEL_INTERVAL_MS / 1000;
     float gyroz = gyroEvent.gyro.z * PI/180.0 * ACCEL_INTERVAL_MS / 1000;
+
     // Serial.print("Accel X: "); Serial.print(accelEvent.acceleration.x);     Serial.print(" ");
     // Serial.print("Y: "); Serial.print(accelEvent.acceleration.y);  Serial.print(" ");
     // Serial.print("Z: "); Serial.println(accelEvent.acceleration.z);
@@ -67,28 +67,18 @@ Accel::Update()
     // Serial.print("Y: "); Serial.print(gyroy);  Serial.print(" ");
     // Serial.print("Z: "); Serial.println(gyroz);
 
-    // Quaternion rotate;
-    // rotate.from_euler_rotation(gyrox, gyroy, gyroz);
+    // Rotate by the gyro.
     _q = Quaternion().from_euler_rotation(gyrox, gyroy, gyroz).conj() * _q;
-    Quaternion gravity(x, y, z);
-    gravity.normalize();
+    Quaternion gravity(accelEvent.acceleration.x, accelEvent.acceleration.y, accelEvent.acceleration.z);
 
-    // Serial.print("_q W: "); Serial.print(_q.a);
-    // Serial.print(" X: "); Serial.print(_q.b);
-    // Serial.print(" Y: "); Serial.print(_q.c);
-    // Serial.print(" Z: "); Serial.println(_q.d);
+    // Get the size of the vector before normalizing it.
+    float currentAccel = gravity.norm() - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
+    float currentAbsAccel = abs(currentAccel);
+    // TODO: carrino: Ignore gravity if it is too small.
+    gravity.normalize();
 
     Quaternion expected_gravity(0, 0, 1);
     expected_gravity = _q.rotate(expected_gravity);
-    // Serial.print("expected W: "); Serial.print(expected_gravity.a);
-    // Serial.print(" X: "); Serial.print(expected_gravity.b);
-    // Serial.print(" Y: "); Serial.print(expected_gravity.c);
-    // Serial.print(" Z: "); Serial.println(expected_gravity.d);
-
-    // Serial.print("gravity W: "); Serial.print(gravity.a);
-    // Serial.print(" X: "); Serial.print(gravity.b);
-    // Serial.print(" Y: "); Serial.print(gravity.c);
-    // Serial.print(" Z: "); Serial.println(gravity.d);
 
     Quaternion toRotate = expected_gravity.rotation_between_vectors(gravity);
     // Serial.print("toRot W: "); Serial.print(toRotate.a);
@@ -96,30 +86,15 @@ Accel::Update()
     // Serial.print(" Y: "); Serial.print(toRotate.c);
     // Serial.print(" Z: "); Serial.println(toRotate.d);
 
-    //expected_gravity = toRotate.frational(0.01).rotate(expected_gravity);
-    //expected_gravity = (toRotate.frational(0.01) * _q).rotate(Quaternion(0, 0, 1));
-
-    // Serial.print("afterRot W: "); Serial.print(expected_gravity.a);
-    // Serial.print(" X: "); Serial.print(expected_gravity.b);
-    // Serial.print(" Y: "); Serial.print(expected_gravity.c);
-    // Serial.print(" Z: "); Serial.println(expected_gravity.d);
-
+    // Take gravity into account.
     _q = toRotate.fractional(0.1) * _q;
 
-    float currentAccel = sqrt(x*x + y*y + z*z) - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
-    float currentAbsAccel = abs(currentAccel);
     computeFht(currentAccel);
 
     _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
     _isDancing = _avgAbsAccel > ACCEL_THRESHOLD;
-    // Serial.print("avgAbsAccel: "); Serial.println(_avgAbsAccel);       Serial.print(" ");
-    // Serial.print("currentAccel: "); Serial.println(currentAccel);
-    // Serial.print("temp (C): "); Serial.println(tempEvent.temperature);       Serial.print(" ");
 
     float heading = atan2(magy, magx);
-
-    //Serial.print("heading (rad): "); Serial.println(heading);
-    //Serial.print("orientation: "); Serial.println(_lsm.magData.orientation);
 
     // Correct for when signs are reversed.
     if (heading < 0) { 
