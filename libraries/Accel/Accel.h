@@ -2,13 +2,12 @@
 #define ACCEL_H
 
 #define FHT_N 128
-#define INCLUDE_SENSORS 0
 
 #include <Adafruit_LSM9DS0.h>
 #include "quaternion.h"
 
 #ifndef ACCEL_INTERVAL_MS // sample rate
-#define ACCEL_INTERVAL_MS 50
+  #define ACCEL_INTERVAL_MS 50
 #endif
 
 class Accel

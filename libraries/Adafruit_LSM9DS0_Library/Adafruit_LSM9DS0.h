@@ -55,7 +55,7 @@
 #define XMTYPE                             (false)
 
 #ifndef INCLUDE_SENSORS
-  #define INCLUDE_SENSORS 1
+  #define INCLUDE_SENSORS 0
 #endif
 
 /* Forward reference required for function pointers below. */
