@@ -2,6 +2,7 @@
 #define ACCEL_H
 
 #define FHT_N 128
+#define INCLUDE_SENSORS 0
 
 #include <Adafruit_LSM9DS0.h>
 #include "quaternion.h"

@@ -54,6 +54,10 @@
 #define GYROTYPE                           (true)
 #define XMTYPE                             (false)
 
+#ifndef INCLUDE_SENSORS
+  #define INCLUDE_SENSORS 1
+#endif
+
 /* Forward reference required for function pointers below. */
 class Adafruit_LSM9DS0;
 
@@ -190,6 +194,7 @@ class Adafruit_LSM9DS0
     /* supports one sensor type, and we need to update the unified base class to support   */
     /* multiple sensors in a single driver, returning an array */
     bool getEvent  ( sensors_event_t* accel, sensors_event_t* mag, sensors_event_t* gyro, sensors_event_t* temp );    
+#if INCLUDE_SENSORS == 1
     void getSensor ( sensor_t* accel, sensor_t* mag, sensor_t* gyro, sensor_t* temp );
 
     /* Subclass to expose each sensor on the LSM9DS0 as an Adafruit_Sensor instance. */
@@ -232,6 +237,7 @@ class Adafruit_LSM9DS0
     Sensor& getMag   ( void ) { return _magSensor; }
     Sensor& getGyro  ( void ) { return _gyroSensor; }
     Sensor& getTemp  ( void ) { return _tempSensor; }
+#endif
 
   private:
     boolean _i2c;
@@ -244,10 +250,12 @@ class Adafruit_LSM9DS0
     int32_t _lsm9dso_sensorid_mag;
     int32_t _lsm9dso_sensorid_gyro;
     int32_t _lsm9dso_sensorid_temp;
+#if INCLUDE_SENSORS == 1
     Sensor _accelSensor;
     Sensor _magSensor;
     Sensor _gyroSensor;
     Sensor _tempSensor;
+#endif
 
     /* Functions to get individual sensor measurements and metadata. */
     /* Note that these functions will NOT update the sensor state before getting */
@@ -257,10 +265,12 @@ class Adafruit_LSM9DS0
     void getMagEvent    ( sensors_event_t* event, uint32_t timestamp );
     void getGyroEvent   ( sensors_event_t* event, uint32_t timestamp );
     void getTempEvent   ( sensors_event_t* event, uint32_t timestamp );
+#if INCLUDE_SENSORS == 1
     void getAccelSensor ( sensor_t* sensor );
     void getMagSensor   ( sensor_t* sensor );
     void getGyroSensor  ( sensor_t* sensor );
     void getTempSensor  ( sensor_t* sensor );
+#endif
 
 };
 
