@@ -43,11 +43,17 @@ Quaternion & Quaternion::normalize() {
 }
 
 Quaternion & Quaternion::from_euler_rotation(float x, float y, float z) {
-    a = cos(x/2) * cos(y/2) * cos(z/2) + sin(x/2) * sin(y/2) * sin(z/2);
-    b = sin(x/2) * cos(y/2) * cos(z/2) - cos(x/2) * sin(y/2) * sin(z/2);
-    c = cos(x/2) * sin(y/2) * cos(z/2) + sin(x/2) * cos(y/2) * sin(z/2);
-    d = cos(x/2) * cos(y/2) * sin(z/2) - sin(x/2) * sin(y/2) * cos(z/2);
-    normalize();
+    float c1 = cos(y/2);
+    float c2 = cos(z/2);
+    float c3 = cos(x/2);
+
+    float s1 = sin(y/2);
+    float s2 = sin(z/2);
+    float s3 = sin(x/2);
+    a = c1 * c2 * c3 - s1 * s2 * s3;
+    b = s1 * s2 * c3 + c1 * c2 * s3;
+    c = s1 * c2 * c3 + c1 * s2 * s3;
+    d = c1 * s2 * c3 - s1 * c2 * s3;
     return *this;
 }
 
@@ -74,12 +80,20 @@ const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const
     return ret;
 }
 
-//const float Quaternion::dot_product(const Quaternion& q) const {
-//    return a * q.a + b * q.b + c * q.c + d * q.d;
-//}
+const float Quaternion::dot_product(const Quaternion& q) const {
+    return a * q.a + b * q.b + c * q.c + d * q.d;
+}
 
 const Quaternion Quaternion::rotate(const Quaternion& q) const {
     return (*this) * q * conj();
+}
+
+Quaternion & Quaternion::frational(const float& f) {
+    a = 1-f + f*a;
+    b *= f;
+    c *= f;
+    d *= f;
+    return normalize();
 }
 
 

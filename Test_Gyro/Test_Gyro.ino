@@ -1,7 +1,6 @@
 #include <Wire.h>
-#include <Accel.h>
-
 #define ACCEL_INTERVAL_MS 50
+#include <Accel.h>
 
 Accel accel(ACCEL_INTERVAL_MS);
 

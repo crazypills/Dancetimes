@@ -54,27 +54,32 @@ Accel::Update()
     float magx = magEvent.magnetic.x + MAG_CALIBRATE_X;
     float magy = magEvent.magnetic.y + MAG_CALIBRATE_Y;
     float magz = magEvent.magnetic.z;
-    float gyrox = gyroEvent.gyro.x * PI/180 * .05;
-    float gyroy = gyroEvent.gyro.y * PI/180 * .05;
-    float gyroz = gyroEvent.gyro.z * PI/180 * .05;
+    float gyrox = gyroEvent.gyro.x * PI/180.0 * ACCEL_INTERVAL_MS / 1000;
+    float gyroy = gyroEvent.gyro.y * PI/180.0 * ACCEL_INTERVAL_MS / 1000;
+    float gyroz = gyroEvent.gyro.z * PI/180.0 * ACCEL_INTERVAL_MS / 1000;
     // Serial.print("Accel X: "); Serial.print(accelEvent.acceleration.x);     Serial.print(" ");
     // Serial.print("Y: "); Serial.print(accelEvent.acceleration.y);  Serial.print(" ");
     // Serial.print("Z: "); Serial.println(accelEvent.acceleration.z);
     // Serial.print("Mag X: "); Serial.print(magx);     Serial.print(" ");
     // Serial.print("Y: "); Serial.print(magy);  Serial.print(" ");
     // Serial.print("Z: "); Serial.println(magz);
-    Serial.print("Gyro X: "); Serial.print(gyrox);     Serial.print(" ");
-    Serial.print("Y: "); Serial.print(gyroy);  Serial.print(" ");
-    Serial.print("Z: "); Serial.println(gyroz);
+    // Serial.print("Gyro X: "); Serial.print(gyrox);     Serial.print(" ");
+    // Serial.print("Y: "); Serial.print(gyroy);  Serial.print(" ");
+    // Serial.print("Z: "); Serial.println(gyroz);
 
-    Quaternion rotate;
-    rotate.from_euler_rotation(gyrox, gyroy, gyroz);
-    _q *= Quaternion().from_euler_rotation(gyrox, gyroy, gyroz);
+    // Quaternion rotate;
+    // rotate.from_euler_rotation(gyrox, gyroy, gyroz);
+    _q = Quaternion().from_euler_rotation(gyrox, gyroy, gyroz).conj() * _q;
     Quaternion gravity(x, y, z);
     gravity.normalize();
+
+    // Serial.print("_q W: "); Serial.print(_q.a);
+    // Serial.print(" X: "); Serial.print(_q.b);
+    // Serial.print(" Y: "); Serial.print(_q.c);
+    // Serial.print(" Z: "); Serial.println(_q.d);
+
     Quaternion expected_gravity(0, 0, 1);
     expected_gravity = _q.rotate(expected_gravity);
-
     Serial.print("expected W: "); Serial.print(expected_gravity.a);
     Serial.print(" X: "); Serial.print(expected_gravity.b);
     Serial.print(" Y: "); Serial.print(expected_gravity.c);
@@ -86,17 +91,20 @@ Accel::Update()
     Serial.print(" Z: "); Serial.println(gravity.d);
 
     Quaternion toRotate = expected_gravity.rotation_between_vectors(gravity);
-    Serial.print("toRot W: "); Serial.print(toRotate.a);
-    Serial.print(" X: "); Serial.print(toRotate.b);
-    Serial.print(" Y: "); Serial.print(toRotate.c);
-    Serial.print(" Z: "); Serial.println(toRotate.d);
+    // Serial.print("toRot W: "); Serial.print(toRotate.a);
+    // Serial.print(" X: "); Serial.print(toRotate.b);
+    // Serial.print(" Y: "); Serial.print(toRotate.c);
+    // Serial.print(" Z: "); Serial.println(toRotate.d);
 
-    expected_gravity = toRotate.rotate(expected_gravity);
+    //expected_gravity = toRotate.frational(0.01).rotate(expected_gravity);
+    //expected_gravity = (toRotate.frational(0.01) * _q).rotate(Quaternion(0, 0, 1));
 
-    Serial.print("expecty W: "); Serial.print(expected_gravity.a);
-    Serial.print(" X: "); Serial.print(expected_gravity.b);
-    Serial.print(" Y: "); Serial.print(expected_gravity.c);
-    Serial.print(" Z: "); Serial.println(expected_gravity.d);
+    // Serial.print("afterRot W: "); Serial.print(expected_gravity.a);
+    // Serial.print(" X: "); Serial.print(expected_gravity.b);
+    // Serial.print(" Y: "); Serial.print(expected_gravity.c);
+    // Serial.print(" Z: "); Serial.println(expected_gravity.d);
+
+    //_q = toRotate.frational(0.1) * _q;
 
     float currentAccel = sqrt(x*x + y*y + z*z) - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
     float currentAbsAccel = abs(currentAccel);
@@ -144,6 +152,15 @@ Accel::Update()
     return true;
 }
 
+float normalize_rads(float angle_rad) {
+    if (angle_rad < 0) {
+        angle_rad += 2 * PI;
+    } else if (angle_rad >= 2*PI) {
+        angle_rad -= 2 * PI;
+    }
+    return angle_rad;
+}
+
 void Accel::computeFht(float lastValue) {
     lastValue *= 4000;
     lastValue =  max(-32767, min(32767, lastValue));
@@ -181,12 +198,7 @@ void Accel::computeFht(float lastValue) {
     float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg);
     // Serial.print("Phase: "); Serial.println(phase);
     if (maxIndex == _old_max_index && maxIndex != 0) {
-        float _phaseDiff = phase - _old_phase;
-        if (_phaseDiff < 0) {
-            _phaseDiff += 2 * PI;
-        } else if (_phaseDiff >= 2*PI) {
-            _phaseDiff -= 2 * PI;
-        }
+        float _phaseDiff = normalize_rads(phase - _old_phase);
 
         // Only update the rate if we are in the same fht bucket.
         _phaseRateAverage = (((_phaseRateAverage * 9) + _phaseDiff ) / 10);
@@ -202,11 +214,7 @@ void Accel::computeFht(float lastValue) {
     }
 
     _phase_avg = (_phase_avg * 19 + phase) / 20;
-    if (_phase_avg < -PI) {
-        _phase_avg += 2*PI;
-    } else if (_phase_avg >= PI) {
-        _phase_avg -= 2*PI;
-    }
+    _phase_avg = normalize_rads(_phase_avg + PI) - PI;
 
     // Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
     // Serial.print("Phase Avg: "); Serial.println(_phase_avg);
