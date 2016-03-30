@@ -2,6 +2,7 @@
 #include "Arduino.h"
 
 // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/arithmetic/index.htm
+// 800B
 Quaternion & Quaternion::operator*=(const Quaternion &q) {
     float e = q.a;
     float f = q.b;
@@ -32,6 +33,7 @@ Quaternion & Quaternion::operator*=(const float &scale) {
     return *this;
 }
 
+// 400B
 Quaternion & Quaternion::normalize() {
     float norm2 = a*a + b*b + c*c + d*d;
     float norm = sqrt(norm2);
@@ -44,7 +46,9 @@ Quaternion & Quaternion::normalize() {
 
 // This method takes an euler rotation in rad and converts it to an equivilent 
 // Quaternion rotation.
+// 800B
 Quaternion & Quaternion::from_euler_rotation(float x, float y, float z) {
+    // We write cos here as sin(90 - theta) for prog memory
     float c1 = cos(y/2);
     float c2 = cos(z/2);
     float c3 = cos(x/2);
@@ -68,10 +72,11 @@ const Quaternion Quaternion::conj() const {
 }
 
 // http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/
-    // This method takes two vectors and computes the rotation vector between them.
-    // Both the left and right hand sides must be pure vectors (a == 0)
-    // Both the left and right hand sides must normalized already.
-    // This computes the rotation that will tranform this to q.
+// This method takes two vectors and computes the rotation vector between them.
+// Both the left and right hand sides must be pure vectors (a == 0)
+// Both the left and right hand sides must normalized already.
+// This computes the rotation that will tranform this to q.
+// 500B
 const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const {
     // w = 1 + v1•v2
     // x = (v1 x v2).x 

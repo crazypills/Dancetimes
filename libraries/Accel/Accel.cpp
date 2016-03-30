@@ -45,8 +45,8 @@ Accel::Update()
     sensors_event_t accelEvent;
     sensors_event_t magEvent;
     sensors_event_t gyroEvent;
-    sensors_event_t tempEvent;
-    _lsm.getEvent(&accelEvent, &magEvent, &gyroEvent, &tempEvent);
+    //sensors_event_t tempEvent;
+    _lsm.getEvent(&accelEvent, &magEvent, &gyroEvent, NULL);
 
     float x = accelEvent.acceleration.x;
     float y = accelEvent.acceleration.y;
