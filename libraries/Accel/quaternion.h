@@ -11,7 +11,7 @@ public:
     Quaternion() {a = 1; b = c = d = 0;}
 
     // This is a vector that can be rotated in Quaternion space.
-    Quaternion(int x, int y, int z) {a = 0; b = x; c = y; d = z;}
+    Quaternion(float x, float y, float z) {a = 0; b = x; c = y; d = z;}
 
     Quaternion & operator=(const Quaternion &rhs) {
         a = rhs.a;
@@ -24,8 +24,8 @@ public:
     // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/arithmetic/index.htm
     Quaternion & operator*=(const Quaternion &q);
     const Quaternion operator* (const Quaternion& q) const { return Quaternion(*this) *= q; }
-    Quaternion & operator-=(const Quaternion &q);
-    const Quaternion operator-(const Quaternion& q) const { return Quaternion(*this) -= q; }
+    Quaternion & operator+=(const Quaternion &q);
+    const Quaternion operator+(const Quaternion& q) const { return Quaternion(*this) += q; }
     Quaternion & operator*=(const float &scale);
     const Quaternion operator*(const float& scale) const { return Quaternion(*this) *= scale; }
     const float norm() const;

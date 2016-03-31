@@ -7,7 +7,7 @@
 #include "quaternion.h"
 
 #ifndef ACCEL_INTERVAL_MS // sample rate
-  #define ACCEL_INTERVAL_MS 50
+  #define ACCEL_INTERVAL_MS 200
 #endif
 
 class Accel

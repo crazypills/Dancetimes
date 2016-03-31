@@ -30,9 +30,7 @@ bool Accel::begin()
     return true;
 }
 
-bool
-Accel::Update()
-{
+bool Accel::Update() {
     float currentCompass = 0;
     if ( millis() - _lastUpdateMS > _intervalMS + 10) {
         Serial.println("ERROR: We didn't update accel in time.");
@@ -77,22 +75,53 @@ Accel::Update()
     // TODO: carrino: Ignore gravity if it is too small.
     gravity.normalize();
 
-    Quaternion expected_gravity(0, 0, 1);
-    expected_gravity = _q.rotate(expected_gravity);
+    Quaternion expected_gravity = _q.rotate(Quaternion(0, 0, 1));
 
-    Quaternion toRotate = expected_gravity.rotation_between_vectors(gravity);
+    Quaternion toRotateG = expected_gravity.rotation_between_vectors(gravity);
     // Serial.print("toRot W: "); Serial.print(toRotate.a);
     // Serial.print(" X: "); Serial.print(toRotate.b);
     // Serial.print(" Y: "); Serial.print(toRotate.c);
     // Serial.print(" Z: "); Serial.println(toRotate.d);
 
-    // Take gravity into account.
-    _q = toRotate.fractional(0.1) * _q;
-
     computeFht(currentAccel);
 
     _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
     _isDancing = _avgAbsAccel > ACCEL_THRESHOLD;
+
+    Quaternion mag(magx, magy, magz);
+    // We want to subtract gravity from the magnetic reading.
+    // mag readings point into the earth quite a bit, but we don't really care about that.
+    // We just want to use mag for rotation around the gravity axis.
+    // https://en.wikipedia.org/wiki/Earth%27s_magnetic_field#Inclination
+    mag += expected_gravity * (-expected_gravity.dot_product(mag));
+    mag.normalize();
+    Quaternion expected_north = _q.rotate(Quaternion(1, 0, 0));
+    Serial.print("exNorth W: "); Serial.print(expected_north.a);
+    Serial.print(" X: "); Serial.print(expected_north.b);
+    Serial.print(" Y: "); Serial.print(expected_north.c);
+    Serial.print(" Z: "); Serial.println(expected_north.d);
+
+    Quaternion toRotateMag = expected_north.rotation_between_vectors(mag);
+
+    Serial.print("magNoG W: "); Serial.print(mag.a);
+    Serial.print(" X: "); Serial.print(mag.b);
+    Serial.print(" Y: "); Serial.print(mag.c);
+    Serial.print(" Z: "); Serial.print(mag.d);
+    Serial.print(" norm: "); Serial.println(mag.norm());
+
+    Serial.print(" dot: "); Serial.println(mag.dot_product(expected_north));
+    Serial.print(" dotdeg: "); Serial.println(180/PI*acos(mag.dot_product(expected_north)));
+
+    Serial.print("toRotate W: "); Serial.print(toRotateMag.a);
+    Serial.print(" X: "); Serial.print(toRotateMag.b);
+    Serial.print(" Y: "); Serial.print(toRotateMag.c);
+    Serial.print(" Z: "); Serial.print(toRotateMag.d);
+    Serial.print(" deg: "); Serial.print(2.0*acos(toRotateMag.a)*180/PI);
+    Serial.print(" norm: "); Serial.println(toRotateMag.norm());
+
+    // Take gravity into account.
+    _q = toRotateG.fractional(0.1) * _q;
+    _q = toRotateMag.fractional(0.01) * _q;
 
     float heading = atan2(magy, magx);
 
