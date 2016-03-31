@@ -95,7 +95,10 @@ bool Accel::Update() {
     // https://en.wikipedia.org/wiki/Earth%27s_magnetic_field#Inclination
     mag += expected_gravity * (-expected_gravity.dot_product(mag));
     mag.normalize();
+
     Quaternion expected_north = _q.rotate(Quaternion(1, 0, 0));
+    expected_north += expected_gravity * (-expected_gravity.dot_product(expected_north));
+    expected_north.normalize();
     Serial.print("exNorth W: "); Serial.print(expected_north.a);
     Serial.print(" X: "); Serial.print(expected_north.b);
     Serial.print(" Y: "); Serial.print(expected_north.c);
@@ -119,7 +122,7 @@ bool Accel::Update() {
     Serial.print(" deg: "); Serial.print(2.0*acos(toRotateMag.a)*180/PI);
     Serial.print(" norm: "); Serial.println(toRotateMag.norm());
 
-    // Take gravity into account.
+    // Take gravity and compass into account.
     _q = toRotateG.fractional(0.1) * _q;
     _q = toRotateMag.fractional(0.01) * _q;
 
