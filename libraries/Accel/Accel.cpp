@@ -25,7 +25,7 @@ bool Accel::begin()
       while (1);
     }
     _lsm.setupAccel(_lsm.LSM9DS0_ACCELRANGE_4G);
-    _lsm.setupMag(_lsm.LSM9DS0_MAGGAIN_2GAUSS);
+    // _lsm.setupMag(_lsm.LSM9DS0_MAGGAIN_2GAUSS);
     _lsm.setupGyro(_lsm.LSM9DS0_GYROSCALE_500DPS);
 	
     return true;
@@ -37,7 +37,7 @@ bool Accel::Update() {
     if ( newMillis - _lastUpdateMS > _intervalMS + 10) {
         Serial.println("ERROR: We didn't update accel in time.");
     }
-    if ( newMillis - _lastUpdateMS < _intervalMS) {
+    if (newMillis - _lastUpdateMS < _intervalMS) {
         return false;
     }
     int elaspedMillis = newMillis - _lastUpdateMS;
@@ -65,15 +65,6 @@ bool Accel::Update() {
     float gyroy = gyroEvent.gyro.y * PI/180.0 * elaspedMillis / 1000.0;
     float gyroz = gyroEvent.gyro.z * PI/180.0 * elaspedMillis / 1000.0;
 
-    //if (_count % 5 == 0) {
-    //Serial.print("Mag X: "); Serial.print(magx);     Serial.print(" ");
-    //Serial.print("Y: "); Serial.print(magy);  Serial.print(" ");
-    //Serial.print("Z: "); Serial.println(magz);
-    // Serial.print("Gyro X: "); Serial.print(gyrox);     Serial.print(" ");
-    // Serial.print("Y: "); Serial.print(gyroy);  Serial.print(" ");
-    // Serial.print("Z: "); Serial.println(gyroz);
-    //}
-
     // Rotate by the gyro.
     Quaternion gyroRotation = Quaternion().from_euler_rotation(gyrox, gyroy, gyroz);
     _q *= gyroRotation;
@@ -94,7 +85,9 @@ bool Accel::Update() {
     float currentAccel = gravity.norm() - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
     float currentAbsAccel = abs(currentAccel);
     _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
-    _isDancing = _avgAbsAccel > ACCEL_THRESHOLD;
+    if (elaspedMillis >= FHT_INTERVAL_MS) {
+        computeFht(currentAccel);
+    }
 
     Quaternion expected_gravity = _q.conj().rotate(Quaternion(0, 0, 1));
 
@@ -182,11 +175,6 @@ bool Accel::Update() {
 
     }
 
-
-    if (_count % 10 == 0) {
-        computeFht(currentAccel);
-    }
-
     return true;
 }
 
@@ -269,14 +257,8 @@ float Accel::getPhasePercentage() {
     return (_phase_avg + PI)/(2*PI);
 }
 
-long Accel::GetCompassReading()
-{
-    return _compassReading;
-}
-
-bool Accel::isDancing()
-{
-    return _isDancing;
+bool Accel::isDancing() {
+    return  _avgAbsAccel > ACCEL_THRESHOLD;
 }
 
 float Accel::getPhaseRatePercentage()
