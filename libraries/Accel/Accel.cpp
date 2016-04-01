@@ -9,33 +9,29 @@
 #define ACCELEROMETER_CALIBRATE 0
 #define MAG_CALIBRATE_X 0.7
 #define MAG_CALIBRATE_Y -0.5
-#define MAG_INVERT_Z 1
+#define MAG_INVERT_Z -1.0
 
-Accel::Accel(uint32_t intervalMS)
-{
-	_intervalMS = intervalMS;
+Accel::Accel(uint32_t intervalMS) {
+    _intervalMS = intervalMS;
 }
 
-bool Accel::begin()
-{
+bool Accel::begin() {
     // Try to initialise and warn if we couldn't detect the chip
-    if (!_lsm.begin())
-    {
-      Serial.println("Oops ... unable to initialize the LSM. Check your wiring!");
+    if (!_lsm.begin()) {
+      Serial.println("LSM fail");
       while (1);
     }
-    _lsm.setupAccel(_lsm.LSM9DS0_ACCELRANGE_4G);
+    // _lsm.setupAccel(_lsm.LSM9DS0_ACCELRANGE_4G);
     // _lsm.setupMag(_lsm.LSM9DS0_MAGGAIN_2GAUSS);
     _lsm.setupGyro(_lsm.LSM9DS0_GYROSCALE_500DPS);
-	
+        
     return true;
 }
 
 bool Accel::Update() {
-    float currentCompass = 0;
     int newMillis = millis();
     if ( newMillis - _lastUpdateMS > _intervalMS + 10) {
-        Serial.println("ERROR: We didn't update accel in time.");
+        Serial.println("E: accel time");
     }
     if (newMillis - _lastUpdateMS < _intervalMS) {
         return false;
@@ -52,18 +48,14 @@ bool Accel::Update() {
 
     float magx = magEvent.magnetic.x + MAG_CALIBRATE_X;
     float magy = magEvent.magnetic.y + MAG_CALIBRATE_Y;
-    float magz = magEvent.magnetic.z;
-    if (MAG_INVERT_Z) {
-        // For some reason z points the opposite of north
-        magz *= -1.0;
-    }
-
+    float magz = magEvent.magnetic.z * MAG_INVERT_Z; // For some reason z points the opposite of north.
 
     // Gyro is in degrees per second, so we change to rads and mult by dt to get rotation.
     float degPerSec = Quaternion(gyroEvent.gyro.x, gyroEvent.gyro.y, gyroEvent.gyro.z).norm();
-    float gyrox = gyroEvent.gyro.x * PI/180.0 * elaspedMillis / 1000.0;
-    float gyroy = gyroEvent.gyro.y * PI/180.0 * elaspedMillis / 1000.0;
-    float gyroz = gyroEvent.gyro.z * PI/180.0 * elaspedMillis / 1000.0;
+    float degPerSecToRads = PI/180.0 * elaspedMillis / 1000.0;
+    float gyrox = gyroEvent.gyro.x * degPerSecToRads;
+    float gyroy = gyroEvent.gyro.y * degPerSecToRads;
+    float gyroz = gyroEvent.gyro.z * degPerSecToRads;
 
     // Rotate by the gyro.
     Quaternion gyroRotation = Quaternion().from_euler_rotation(gyrox, gyroy, gyroz);
@@ -200,30 +192,33 @@ void Accel::computeFht(float lastValue) {
     fht_reorder();
     fht_run();
     fht_mag_log();
-    //fht_mag_lin();
+
+    //Serial.write(255); // send a start byte
+    //Serial.write(fht_log_out, FHT_N/2); // send out the data
+
     int max = 0;
     int maxIndex = 0;
-    for (int i = 0; i < FHT_N/2; i++)
-    {
+    for (int i = 0; i < FHT_N/2; i++) {
         uint8_t val = fht_log_out[i];
-        //uint16_t val = fht_lin_out[i];
-        //Serial.print("Index: "); Serial.print(i); Serial.print("  val: "); Serial.println(val);
-        if (val > max)
-        {
+        if (val > max) {
             max = val;
             maxIndex = i;
         }
+        //Serial.print("index: "); Serial.print(i);
+        //Serial.print(" log: "); Serial.print(fht_log_out[i]);
+        //Serial.print(" val: "); Serial.print(fht_input[i]);
+        //Serial.print(" val2: "); Serial.println(fht_input[FHT_N - 1 - i]);
     }
-    // Serial.print("Index: "); Serial.print(maxIndex); Serial.print("  val: "); Serial.println(max);
-    int k = maxIndex;
-    int negK = FHT_N - 1 - k;
-    int realPlusImg = fht_input[k];
-    int realMinusImg = fht_input[negK];
+    int realPlusImg = fht_input[maxIndex];
+    int realMinusImg = fht_input[FHT_N - 1 - maxIndex];
+    //Serial.print("maxIndex: "); Serial.print(maxIndex);
+    //Serial.print(" realPlusImg: "); Serial.print(realPlusImg);
+    //Serial.print(" realMinusImg: "); Serial.println(realMinusImg);
 
-    //float phase = atan2((fht_input[k]	 - fht_input[negK]), (fht_input[k] + fht_input[negK]));
+    //float phase = atan2((fht_input[k]  - fht_input[negK]), (fht_input[k] + fht_input[negK]));
     float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg);
     // Serial.print("Phase: "); Serial.println(phase);
-    if (maxIndex == _old_max_index && maxIndex != 0) {
+    if (maxIndex == _old_max_index && maxIndex > 1) {
         float _phaseDiff = normalize_rads(phase - _old_phase);
 
         // Only update the rate if we are in the same fht bucket.
@@ -245,12 +240,8 @@ void Accel::computeFht(float lastValue) {
     // Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
     // Serial.print("Phase Avg: "); Serial.println(_phase_avg);
     //for (int i = 0; i < FHT_N; i++) {
-    //	  fht_input[i] = (int) old_fht[0];
+    //    fht_input[i] = (int) old_fht[0];
     //}
-}
-
-float Accel::getPhase() {
-    return _phase_avg;
 }
 
 float Accel::getPhasePercentage() {
@@ -261,7 +252,6 @@ bool Accel::isDancing() {
     return  _avgAbsAccel > ACCEL_THRESHOLD;
 }
 
-float Accel::getPhaseRatePercentage()
-{
+float Accel::getPhaseRatePercentage() {
     return _phaseRateAverage/(2*PI);
 }
