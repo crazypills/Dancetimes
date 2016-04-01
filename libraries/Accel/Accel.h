@@ -7,7 +7,7 @@
 #include "quaternion.h"
 
 #ifndef ACCEL_INTERVAL_MS // sample rate
-  #define ACCEL_INTERVAL_MS 200
+  #define ACCEL_INTERVAL_MS 50
 #endif
 
 class Accel
@@ -29,6 +29,7 @@ protected:
 		float _phase_avg;
 		float _old_max_index;
 		float _phaseRateAverage;
+                int _count;
                 Quaternion _q;
 	public:
 		Accel(uint32_t intervalMS);
