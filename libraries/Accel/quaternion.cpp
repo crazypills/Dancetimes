@@ -52,7 +52,6 @@ Quaternion & Quaternion::normalize() {
 // Quaternion rotation.
 // 800B
 Quaternion & Quaternion::from_euler_rotation(float x, float y, float z) {
-    // We write cos here as sin(90 - theta) for prog memory
     float c1 = cos(y/2);
     float c2 = cos(z/2);
     float c3 = cos(x/2);
@@ -75,22 +74,33 @@ const Quaternion Quaternion::conj() const {
     return ret;
 }
 
-// http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/
 // This method takes two vectors and computes the rotation vector between them.
 // Both the left and right hand sides must be pure vectors (a == 0)
 // Both the left and right hand sides must normalized already.
 // This computes the rotation that will tranform this to q.
 // 500B
 const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const {
+    // http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/
+    // We want to compute the below values.
     // w = 1 + v1•v2
     // x = (v1 x v2).x 
     // y = (v1 x v2).y
     // z = (v1 x v2).z
-    Quaternion ret;
-    ret.a = 1 + b * q.b + c * q.c + d * q.d;
-    ret.b = c * q.d - d * q.c;
-    ret.c = d * q.b - b * q.d;
-    ret.d = b * q.c - c * q.b;
+
+    // Instead of writing the below code direclty, we reduce code size by
+    // just using multiplication to implement it.
+    //Quaternion ret;
+    //ret.a = 1 + b * q.b + c * q.c + d * q.d;
+    //ret.b = c * q.d - d * q.c;
+    //ret.c = d * q.b - b * q.d;
+    //ret.d = b * q.c - c * q.b;
+    //ret.normalize();
+    //return ret;
+
+    // From wikipedia https://en.wikipedia.org/wiki/Quaternion#Quaternions_and_the_geometry_of_R3
+    // The cross product p x q is just the vector part of multiplying p * q
+    Quaternion ret = (*this) * q;
+    ret.a = 1 + dot_product(q);
     ret.normalize();
     return ret;
 }
