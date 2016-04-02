@@ -260,7 +260,7 @@ void Accel::computeFht(float lastValue, int elaspedMillis) {
     //Serial.print("bpm   avg: "); Serial.println(_phaseRateAverage / (2.0 * PI) * 1000.0 / FHT_INTERVAL_MS * 60);
 }
 
-void Accel::getOrientation(float &x, float &y, float &z) {
+void Accel::getOrientation(float &x, float &y, float &z) const {
     Quaternion vec(1, 0, 0);
     vec = _q.conj().rotate(vec);
     x = vec.b;
@@ -268,14 +268,14 @@ void Accel::getOrientation(float &x, float &y, float &z) {
     z = vec.d;
 }
 
-float Accel::getPhasePercentage() {
+const float Accel::getPhasePercentage() const {
     return _phase_avg/(2*PI);
 }
 
-bool Accel::isDancing() {
+const bool Accel::isDancing() const {
     return  _avgAbsAccel > ACCEL_THRESHOLD;
 }
 
-float Accel::getPhaseRatePercentage() {
+const float Accel::getPhaseRatePercentage() const {
     return _phaseRateAverage/(2*PI);
 }

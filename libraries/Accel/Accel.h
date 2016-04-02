@@ -28,10 +28,10 @@ class Accel {
         Accel(uint32_t intervalMS);
         bool begin();           // Convention for this funciton is lower case...not sure why
         bool Update();
-        bool isDancing();
-        float getPhasePercentage();
-        float getPhaseRatePercentage();
-        void getOrientation(float &x, float &y, float &z);
+        const bool isDancing() const;
+        const float getPhasePercentage() const;
+        const float getPhaseRatePercentage() const;
+        void getOrientation(float &x, float &y, float &z) const;
 };
 
 #endif // ACCEL_H
