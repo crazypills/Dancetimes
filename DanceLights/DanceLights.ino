@@ -2,7 +2,6 @@
 #include <Wire.h>
 #include <Accel.h>
 
-
 #define ACCEL_INTERVAL_MS 50
 
 // Define some NeoPatterns for the two rings and the stick

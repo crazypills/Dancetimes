@@ -225,15 +225,15 @@ void Accel::computeFht(float lastValue, int elaspedMillis) {
 
     float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg) + PI;
 
-    // Add the rate to our phase
+    // Add the rate to our phase even in the case where we don't update the rate.
     _phase_avg += _phaseRateAverage;
 
     if (maxIndex == _old_max_index && maxIndex > 1) {
         float phaseDiff = normalize_rads(phase - _old_phase);
         //Serial.print("maxIndex: "); Serial.print(maxIndex);
-        Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
-        Serial.print("PhaseDBPM: "); Serial.println(phaseDiff/(2*PI) * 1000 / elaspedMillis * 60);
-        Serial.print("Phase    : "); Serial.println(phase);
+        //Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
+        //Serial.print("PhaseDBPM: "); Serial.println(phaseDiff/(2*PI) * 1000 / elaspedMillis * 60);
+        //Serial.print("Phase    : "); Serial.println(phase);
 
         // Only update the rate if we are in the same fht bucket.
         _phaseRateAverage = (((_phaseRateAverage * 19) + phaseDiff ) / 20);
@@ -246,10 +246,11 @@ void Accel::computeFht(float lastValue, int elaspedMillis) {
 
         _phase_avg = (_phase_avg * 9 + phase) / 10;
         _phase_avg = normalize_rads(_phase_avg);
+        //Serial.print("Phase    : "); Serial.println(phase);
+        //Serial.print("Phase Avg: "); Serial.println(_phase_avg);
     }
     _old_phase = phase;
     _old_max_index = maxIndex;
-
 
     // Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
     //Serial.print("Phase    : "); Serial.println(phase);
@@ -260,7 +261,7 @@ void Accel::computeFht(float lastValue, int elaspedMillis) {
 }
 
 float Accel::getPhasePercentage() {
-    return (_phase_avg + PI)/(2*PI);
+    return _phase_avg/(2*PI);
 }
 
 bool Accel::isDancing() {
