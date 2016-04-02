@@ -25,7 +25,7 @@ class Accel {
         int _count;
         Quaternion _q;
     public:
-        Accel(const uint32_t &intervalMS);
+        Accel(uint32_t intervalMS) { _intervalMS = intervalMS; }
         bool begin();           // Convention for this funciton is lower case...not sure why
         bool Update();
         const bool isDancing() const;

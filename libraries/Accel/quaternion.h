@@ -42,7 +42,7 @@ public:
     // This method takes one vector and rotates it using this Quaternion.
     // The input must be a pure vector (a == 0)
     const Quaternion rotate(const Quaternion& q) const;
-    Quaternion & fractional(const float& f);
+    Quaternion & fractional(float f);
 };
 
 #endif

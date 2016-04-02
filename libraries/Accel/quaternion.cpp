@@ -113,7 +113,7 @@ const Quaternion Quaternion::rotate(const Quaternion& q) const {
 // rotate between 0-1 as much as it would normally rotate.
 // The math here is pretty sloppy but should work for 
 // most cases.
-Quaternion & Quaternion::fractional(const float& f) {
+Quaternion & Quaternion::fractional(float f) {
     a = 1-f + f*a;
     b *= f;
     c *= f;

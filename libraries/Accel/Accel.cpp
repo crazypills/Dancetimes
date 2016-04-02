@@ -12,14 +12,10 @@
 #define MAG_CALIBRATE_Y -0.5
 #define MAG_INVERT_Z -1.0
 
-Accel::Accel(const uint32_t &intervalMS) {
-    _intervalMS = intervalMS;
-}
-
 bool Accel::begin() {
     // Try to initialise and warn if we couldn't detect the chip
     if (!_lsm.begin()) {
-      Serial.println("LSM fail");
+      Serial.println("LSM!");
       while (1);
     }
     // _lsm.setupAccel(_lsm.LSM9DS0_ACCELRANGE_4G);
