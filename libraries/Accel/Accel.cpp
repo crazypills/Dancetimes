@@ -218,7 +218,6 @@ void Accel::computeFht(float lastValue) {
     //Serial.print(" realPlusImg: "); Serial.print(realPlusImg);
     //Serial.print(" realMinusImg: "); Serial.println(realMinusImg);
 
-    //float phase = atan2((fht_input[k]  - fht_input[negK]), (fht_input[k] + fht_input[negK]));
     float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg);
     // Serial.print("Phase: "); Serial.println(phase);
     if (maxIndex == _old_max_index && maxIndex > 1) {
@@ -242,9 +241,6 @@ void Accel::computeFht(float lastValue) {
 
     // Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
     // Serial.print("Phase Avg: "); Serial.println(_phase_avg);
-    //for (int i = 0; i < FHT_N; i++) {
-    //    fht_input[i] = (int) old_fht[0];
-    //}
 }
 
 float Accel::getPhasePercentage() {

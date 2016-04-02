@@ -96,7 +96,7 @@ void loop()
         Stick.HalfUpDown(Stick.Color(0,255,0),10);
         Stick.SetIndex((accel.getPhase()+PI)/(2*PI));
       }
-      Stick.floatIndexRate = accel.getPhaseRate()/(2*PI);
+      Stick.floatIndexRate = accel.getPhaseRatePercentage();
       Stick.Update();
     }
     else if (digitalRead(9) == LOW)

@@ -30,9 +30,7 @@ protected:
 		bool begin();		// Convention for this funciton is lower case...not sure why
 		bool Update();
 		bool isDancing();
-		float getPhase();
 		float getPhasePercentage();
-		bool directionalThreshold();
 		float getPhaseRatePercentage();
 };
 
