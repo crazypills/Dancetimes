@@ -17,11 +17,11 @@ protected:
 		uint32_t _lastUpdateMS;
 		uint32_t _intervalMS;
 		float _avgAbsAccel;
-		void computeFht(float newValue);
+		void computeFht(float newValue, int elaspedMillis);
 		int _old_fht[FHT_N];
 		float _old_phase;
 		float _phase_avg;
-		float _old_max_index;
+		int _old_max_index;
 		float _phaseRateAverage;
                 int _count;
                 Quaternion _q;

@@ -1,6 +1,7 @@
 #include "Accel.h"
 
 #define LOG_OUT 1
+#define LIN_OUT 0
 #include <FHT.h>
 
 #define MOVING_AVERAGE_INTERVALS 20
@@ -80,7 +81,7 @@ bool Accel::Update() {
     if (elaspedMillis >= FHT_INTERVAL_MS) {
         // clear interrupts when we are doing FHT
         cli();
-        computeFht(currentAccel);
+        computeFht(currentAccel, elaspedMillis);
         sei();
     }
 
@@ -182,65 +183,80 @@ float normalize_rads(float angle_rad) {
     return angle_rad;
 }
 
-void Accel::computeFht(float lastValue) {
-    lastValue *= 4000;
+void Accel::computeFht(float lastValue, int elaspedMillis) {
+    lastValue *= 8000;
     lastValue =  max(-32767, min(32767, lastValue));
-    for (int i = 0; i < FHT_N - 1; i++) {
-        _old_fht[i] = _old_fht[i + 1];
-        fht_input[i] = _old_fht[i];
+    for (int i = FHT_N - 2; i >= 0; i--) {
+        _old_fht[i+1] = _old_fht[i];
+        fht_input[i+1] = _old_fht[i];
     }
-    fht_input[FHT_N - 1] = (int) lastValue;
-    _old_fht[FHT_N - 1] = (int) lastValue;
+    fht_input[0] = (int) lastValue;
+    _old_fht[0] = (int) lastValue;
     fht_window();
     fht_reorder();
     fht_run();
     fht_mag_log();
+    //fht_mag_lin();
 
     //Serial.write(255); // send a start byte
     //Serial.write(fht_log_out, FHT_N/2); // send out the data
 
-    int max = 0;
+    int maxValue = 0;
     int maxIndex = 0;
     for (int i = 0; i < FHT_N/2; i++) {
         uint8_t val = fht_log_out[i];
-        if (val > max) {
-            max = val;
+        //int val = fht_lin_out[i];
+        if (val > maxValue) {
+            maxValue = val;
             maxIndex = i;
         }
         //Serial.print("index: "); Serial.print(i);
-        //Serial.print(" log: "); Serial.print(fht_log_out[i]);
+        //Serial.print(" lin: "); Serial.print(fht_lin_out[i]);
+
+        //float realPlusImg = fht_input[i];
+        //float realMinusImg = i == 0 ? realPlusImg : fht_input[FHT_N - i];
+        //Serial.print(" compute: "); Serial.println(sqrt(realPlusImg * realPlusImg + realMinusImg * realMinusImg));
         //Serial.print(" val: "); Serial.print(fht_input[i]);
         //Serial.print(" val2: "); Serial.println(fht_input[FHT_N - 1 - i]);
     }
-    int realPlusImg = fht_input[maxIndex];
-    int realMinusImg = fht_input[FHT_N - 1 - maxIndex];
-    //Serial.print("maxIndex: "); Serial.print(maxIndex);
-    //Serial.print(" realPlusImg: "); Serial.print(realPlusImg);
-    //Serial.print(" realMinusImg: "); Serial.println(realMinusImg);
 
-    float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg);
-    // Serial.print("Phase: "); Serial.println(phase);
+    int realPlusImg = fht_input[maxIndex];
+    int realMinusImg = maxIndex == 0 ? realPlusImg : fht_input[FHT_N - maxIndex];
+
+    float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg) + PI;
+
+    // Add the rate to our phase
+    _phase_avg += _phaseRateAverage;
+
     if (maxIndex == _old_max_index && maxIndex > 1) {
-        float _phaseDiff = normalize_rads(phase - _old_phase);
+        float phaseDiff = normalize_rads(phase - _old_phase);
+        //Serial.print("maxIndex: "); Serial.print(maxIndex);
+        Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
+        Serial.print("PhaseDBPM: "); Serial.println(phaseDiff/(2*PI) * 1000 / elaspedMillis * 60);
+        Serial.print("Phase    : "); Serial.println(phase);
 
         // Only update the rate if we are in the same fht bucket.
-        _phaseRateAverage = (((_phaseRateAverage * 9) + _phaseDiff ) / 10);
+        _phaseRateAverage = (((_phaseRateAverage * 19) + phaseDiff ) / 20);
+
+        if (phase + PI < _phase_avg) {
+            phase += 2*PI;
+        } else if (phase - PI > _phase_avg) {
+            phase -= 2*PI;
+        }
+
+        _phase_avg = (_phase_avg * 9 + phase) / 10;
+        _phase_avg = normalize_rads(_phase_avg);
     }
     _old_phase = phase;
     _old_max_index = maxIndex;
 
-    _phase_avg += _phaseRateAverage;
-    if (phase + PI < _phase_avg) {
-        phase += 2*PI;
-    } else if (phase - PI > _phase_avg) {
-        phase -= 2*PI;
-    }
-
-    _phase_avg = (_phase_avg * 19 + phase) / 20;
-    _phase_avg = normalize_rads(_phase_avg + PI) - PI;
 
     // Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
-    // Serial.print("Phase Avg: "); Serial.println(_phase_avg);
+    //Serial.print("Phase    : "); Serial.println(phase);
+    //Serial.print("Phase Avg: "); Serial.println(_phase_avg);
+    //Serial.print("rate  Avg: "); Serial.println(_phaseRateAverage);
+    //Serial.print("hz    avg: "); Serial.println(_phaseRateAverage / (2.0 * PI) * 1000.0 / FHT_INTERVAL_MS);
+    //Serial.print("bpm   avg: "); Serial.println(_phaseRateAverage / (2.0 * PI) * 1000.0 / FHT_INTERVAL_MS * 60);
 }
 
 float Accel::getPhasePercentage() {
