@@ -78,7 +78,10 @@ bool Accel::Update() {
     float currentAbsAccel = abs(currentAccel);
     _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
     if (elaspedMillis >= FHT_INTERVAL_MS) {
+        // clear interrupts when we are doing FHT
+        cli();
         computeFht(currentAccel);
+        sei();
     }
 
     Quaternion expected_gravity = _q.conj().rotate(Quaternion(0, 0, 1));
