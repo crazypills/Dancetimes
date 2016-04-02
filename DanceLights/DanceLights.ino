@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <Accel.h>
 
+
 #define ACCEL_INTERVAL_MS 50
 
 // Define some NeoPatterns for the two rings and the stick
@@ -48,21 +49,17 @@ void loop()
       return; 
     }
 
-    if (accel.isDancing())
-    {
+    if (accel.isDancing()) {
       Single.SetIndex(accel.getPhasePercentage(), accel.getPhaseRatePercentage());
       Single.Update();
       //Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
-      if(Stick.ActivePattern != FOLLOWER)
-      {
+      if (Stick.ActivePattern != FOLLOWER) {
         Stick.Follower(Stick.Color(0,255,0),40,2);
       }
     
       //Stick.Update();
-    }
-    else if (digitalRead(9) == LOW)
-    {
+    } else if (digitalRead(9) == LOW) {
       if(Stick.ActivePattern != FOLLOWER)
       {
         Stick.Follower(Stick.Color(255,0,255),200,5);
@@ -82,6 +79,13 @@ void loop()
     }
     else
     { 
+      float x,  y, z;
+      accel.getOrientation(x, y, z);     
+      x = abs(x);
+      y = abs(y);
+      z = abs(z);
+      
+      Single.Color1 = Stick.Color(x*32,y*32, z*32);
       Single.Update();
       if(Stick.ActivePattern != SCANNER)
       {
