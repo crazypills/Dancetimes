@@ -12,7 +12,7 @@
 #define MAG_CALIBRATE_Y -0.5
 #define MAG_INVERT_Z -1.0
 
-Accel::Accel(uint32_t intervalMS) {
+Accel::Accel(const uint32_t &intervalMS) {
     _intervalMS = intervalMS;
 }
 

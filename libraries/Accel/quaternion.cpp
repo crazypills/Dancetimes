@@ -46,7 +46,7 @@ Quaternion & Quaternion::normalize() {
 // This method takes an euler rotation in rad and converts it to an equivilent 
 // Quaternion rotation.
 // 800B
-Quaternion & Quaternion::from_euler_rotation(float x, float y, float z) {
+Quaternion & Quaternion::from_euler_rotation(const float &x, const float &y, const float &z) {
     float c1 = cos(y/2);
     float c2 = cos(z/2);
     float c3 = cos(x/2);
