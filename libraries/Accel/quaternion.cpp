@@ -4,16 +4,11 @@
 // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/arithmetic/index.htm
 // 800B
 Quaternion & Quaternion::operator*=(const Quaternion &q) {
-    float e = q.a;
-    float f = q.b;
-    float g = q.c;
-    float h = q.d;
-
     Quaternion ret;
-    ret.a = a*e - b*f - c*g - d*h;
-    ret.b = b*e + a*f + c*h - d*g;
-    ret.c = a*g - b*h + c*e + d*f;
-    ret.d = a*h + b*g - c*f + d*e;
+    ret.a = a*q.a - b*q.b - c*q.c - d*q.d;
+    ret.b = b*q.a + a*q.b + c*q.d - d*q.c;
+    ret.c = a*q.c - b*q.d + c*q.a + d*q.b;
+    ret.d = a*q.d + b*q.c - c*q.b + d*q.a;
     return (*this = ret);
 }
 
@@ -100,7 +95,7 @@ const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const
     // From wikipedia https://en.wikipedia.org/wiki/Quaternion#Quaternions_and_the_geometry_of_R3
     // The cross product p x q is just the vector part of multiplying p * q
     Quaternion ret = (*this) * q;
-    ret.a = 1 + dot_product(q);
+    ret.a = 1 - ret.a;
     ret.normalize();
     return ret;
 }
