@@ -1,7 +1,6 @@
 #include "Accel.h"
 
 #define LOG_OUT 1
-#define LIN_OUT 0
 #include <FHT.h>
 
 #define MOVING_AVERAGE_INTERVALS 20
@@ -55,8 +54,7 @@ bool Accel::Update() {
     float gyroz = gyroEvent.gyro.z * degPerSecToRads;
 
     // Rotate by the gyro.
-    Quaternion gyroRotation = Quaternion::from_euler_rotation(gyrox, gyroy, gyroz);
-    _q *= gyroRotation;
+    _q *= Quaternion::from_euler_rotation(gyrox, gyroy, gyroz);
     _q.normalize();
 
     Quaternion gravity(accelEvent.acceleration.x, accelEvent.acceleration.y, accelEvent.acceleration.z);
@@ -122,10 +120,6 @@ void Accel::computeFht(float lastValue, int elaspedMillis) {
     fht_reorder();
     fht_run();
     fht_mag_log();
-    //fht_mag_lin();
-
-    //Serial.write(255); // send a start byte
-    //Serial.write(fht_log_out, FHT_N/2); // send out the data
 
     int maxValue = 0;
     int maxIndex = 0;
@@ -136,14 +130,6 @@ void Accel::computeFht(float lastValue, int elaspedMillis) {
             maxValue = val;
             maxIndex = i;
         }
-        //Serial.print("index: "); Serial.print(i);
-        //Serial.print(" lin: "); Serial.print(fht_lin_out[i]);
-
-        //float realPlusImg = fht_input[i];
-        //float realMinusImg = i == 0 ? realPlusImg : fht_input[FHT_N - i];
-        //Serial.print(" compute: "); Serial.println(sqrt(realPlusImg * realPlusImg + realMinusImg * realMinusImg));
-        //Serial.print(" val: "); Serial.print(fht_input[i]);
-        //Serial.print(" val2: "); Serial.println(fht_input[FHT_N - 1 - i]);
     }
 
     int realPlusImg = fht_input[maxIndex];
