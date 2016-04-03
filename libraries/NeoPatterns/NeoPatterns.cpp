@@ -92,39 +92,25 @@ NeoPatterns::SetBlank(bool blank)
 }
 
 // Increment the Index and reset at the end
-void
-NeoPatterns::Increment()
-{
-  if (Direction == FORWARD)
-  {
-      floatIndex += floatIndexRate;
-      if (floatIndex > 1) {
-          floatIndex -= 1;
-          OnComplete();
-      }
-      //Index++;
-      Index = (int) (TotalSteps * floatIndex);
-    if (Index >= TotalSteps)
-    {
-      Index = 0;
-      if (OnComplete != NULL)
-      {
-        OnComplete(); // call the comlpetion callback
-      }
+void NeoPatterns::Increment() {
+    if (Direction == FORWARD) {
+        floatIndex += floatIndexRate;
+        if (floatIndex >= 1.0) {
+            floatIndex -= 1.0;
+            if (OnComplete != NULL) {
+                OnComplete();
+            }
+        }
+    } else {
+        floatIndex -= floatIndexRate;
+        if (floatIndex < 0) {
+            floatIndex += 1;
+            if (OnComplete != NULL) {
+                OnComplete();
+            }
+        }
     }
-  }
-  else // Direction == REVERSE
-  {
-    --Index;
-    if (Index < 0)
-    {
-      Index = TotalSteps - 1;
-      if (OnComplete != NULL)
-      {
-        OnComplete(); // call the comlpetion callback
-      }
-    }
-  }
+    Index = (int) (TotalSteps * floatIndex);
 }
 
 // Reverse pattern direction
@@ -589,17 +575,18 @@ NeoPatterns::Wheel(byte WheelPos)
 
 void
 NeoPatterns::SetIndex(float percentage, float percentageRate) {
-    if (OnComplete != NULL && percentage < floatIndex && floatIndex + 2*percentageRate > 1) {
+    if (OnComplete != NULL
+            && percentage < floatIndex
+            && floatIndex + 2*percentageRate > 1) {
         // Serial.print("complete: "); Serial.println(percentage);
         OnComplete();
     }
-
     // Serial.print("perc: "); Serial.println(percentage);
     // Serial.print("percrate: "); Serial.println(percentageRate);
 
     floatIndexRate = 0;
-    floatIndex = percentage;
-    Index = percentage * TotalSteps;
+    floatIndex = Direction == FORWARD ? percentage : 1.0 - percentage;
+    Index = floatIndex * TotalSteps;
 }
 
 void
