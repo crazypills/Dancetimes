@@ -37,7 +37,7 @@ class NeoPatterns : public Adafruit_NeoPixel
 	//uint8_t Flicker = 3;
 	//uint8_t Brightness;
 	uint8_t Sparkles;
-	uint8_t *LastColors;
+	uint32_t *LastColors;
 	bool BlankState;
 	
 	float floatIndex;

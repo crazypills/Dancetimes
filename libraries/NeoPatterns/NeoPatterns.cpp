@@ -3,7 +3,7 @@
 NeoPatterns::NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)())
   : Adafruit_NeoPixel(pixels, pin, type)
 {
-  LastColors = (uint8_t *)malloc(pixels);
+  LastColors = new uint32_t[pixels];
   OnComplete = callback;
   floatIndexRate = 1;
   BlankState = false;
