@@ -95,65 +95,6 @@ bool Accel::Update() {
 
         _q = _q * toRotateG.fractional(0.1);
         _q = _q * toRotateMag.fractional(0.05);
-
-        // Serial.print("magRot W: "); Serial.print(toRotateMag.a);
-        // Serial.print(" X: "); Serial.print(toRotateMag.b);
-        // Serial.print(" Y: "); Serial.print(toRotateMag.c);
-        // Serial.print(" Z: "); Serial.print(toRotateMag.d);
-        // Serial.print(" deg: "); Serial.print(2.0*acos(toRotateMag.a)*180/PI);
-        // Serial.print(" norm: "); Serial.println(toRotateMag.norm());
-
-        //if (_count % 10 == 0) {
-        //Serial.print("gyroRot W: "); Serial.print(gyroRotation.a);
-        //Serial.print(" X: "); Serial.print(gyroRotation.b);
-        //Serial.print(" Y: "); Serial.print(gyroRotation.c);
-        //Serial.print(" Z: "); Serial.print(gyroRotation.d);
-        //Serial.print(" deg: "); Serial.print(2.0*acos(gyroRotation.a)*180/PI);
-        //Serial.print(" norm: "); Serial.println(gyroRotation.norm());
-
-        //Serial.print("G W: "); Serial.print(gravity.a);
-        //Serial.print(" X: "); Serial.print(gravity.b);
-        //Serial.print(" Y: "); Serial.print(gravity.c);
-        //Serial.print(" Z: "); Serial.print(gravity.d);
-        //Serial.print(" norm: "); Serial.println(gravity.norm());
-
-        //Serial.print("expectG W: "); Serial.print(expected_gravity.a);
-        //Serial.print(" X: "); Serial.print(expected_gravity.b);
-        //Serial.print(" Y: "); Serial.print(expected_gravity.c);
-        //Serial.print(" Z: "); Serial.print(expected_gravity.d);
-        //Serial.print(" norm: "); Serial.println(expected_gravity.norm());
-
-        // Serial.print("MagNorth W: "); Serial.print(mag.a);
-        // Serial.print(" X: "); Serial.print(mag.b);
-        // Serial.print(" Y: "); Serial.print(mag.c);
-        // Serial.print(" Z: "); Serial.print(mag.d);
-        // Serial.print(" norm: "); Serial.println(mag.norm());
-
-        // Serial.print("expectNorth W: "); Serial.print(expected_north.a);
-        // Serial.print(" X: "); Serial.print(expected_north.b);
-        // Serial.print(" Y: "); Serial.print(expected_north.c);
-        // Serial.print(" Z: "); Serial.print(expected_north.d);
-        // Serial.print(" norm: "); Serial.println(expected_north.norm());
-
-        //Serial.print("toRotG W: "); Serial.print(toRotateG.a);
-        //Serial.print(" X: "); Serial.print(toRotateG.b);
-        //Serial.print(" Y: "); Serial.print(toRotateG.c);
-        //Serial.print(" Z: "); Serial.print(toRotateG.d);
-        //Serial.print(" deg: "); Serial.print(2.0*acos(toRotateG.a)*180/PI);
-        //Serial.print(" norm: "); Serial.println(toRotateG.norm());
-
-        //expected_gravity = (_q * toRotateG).conj().rotate(Quaternion(0, 0, 1));
-
-        //toRotateG = gravity.rotation_between_vectors(expected_gravity);
-        //Serial.print("toRotG2 W: "); Serial.print(toRotateG.a);
-        //Serial.print(" X: "); Serial.print(toRotateG.b);
-        //Serial.print(" Y: "); Serial.print(toRotateG.c);
-        //Serial.print(" Z: "); Serial.print(toRotateG.d);
-        //Serial.print(" deg: "); Serial.print(2.0*acos(toRotateG.a)*180/PI);
-        //Serial.print(" norm: "); Serial.println(toRotateG.norm());
-
-        //}
-
     }
 
     return true;

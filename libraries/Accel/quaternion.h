@@ -13,6 +13,10 @@ public:
     // This is a vector that can be rotated in Quaternion space.
     Quaternion(float x, float y, float z) {a = 0; b = x; c = y; d = z;}
 
+    // This returns a Quaternion that rotates in each given axis in radians.
+    // We use standard right hand rule for rotations and coordinates.
+    static const Quaternion from_euler_rotation(float x, float y, float z);
+
     Quaternion & operator=(const Quaternion &rhs) {
         a = rhs.a;
         b = rhs.b;
@@ -31,7 +35,6 @@ public:
     float norm() const;
     Quaternion & normalize();
     const Quaternion conj() const;
-    static const Quaternion from_euler_rotation(float x, float y, float z);
     // This method takes two vectors and computes the rotation vector between them.
     // Both the left and right hand sides must be pure vectors (a == 0)
     // Both the left and right hand sides must normalized already.
