@@ -28,7 +28,7 @@ Quaternion & Quaternion::operator*=(float scale) {
     return *this;
 }
 
-const float Quaternion::norm() const {
+float Quaternion::norm() const {
     float norm2 = a*a + b*b + c*c + d*d;
     return sqrt(norm2);
 }
