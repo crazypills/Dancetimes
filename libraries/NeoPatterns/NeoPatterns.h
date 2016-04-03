@@ -117,9 +117,6 @@ class NeoPatterns : public Adafruit_NeoPixel
     uint8_t Green(uint32_t color);
     // Returns the Blue component of a 32-bit color
     uint8_t Blue(uint32_t color);
-	uint32_t setRed(uint8_t red);
-	uint32_t setGreen(uint8_t green);
-	uint32_t setBlue(uint8_t blue);
     // Input a value 0 to 255 to get a color value.
     // The colours are a transition r - g - b - back to r.
     uint32_t Wheel(byte WheelPos);

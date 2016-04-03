@@ -55,27 +55,16 @@ bool Accel::Update() {
     float gyroz = gyroEvent.gyro.z * degPerSecToRads;
 
     // Rotate by the gyro.
-    Quaternion gyroRotation = Quaternion().from_euler_rotation(gyrox, gyroy, gyroz);
+    Quaternion gyroRotation = Quaternion::from_euler_rotation(gyrox, gyroy, gyroz);
     _q *= gyroRotation;
     _q.normalize();
 
-    //if (_count % 10 == 0) {
-    //Serial.print("_q W: "); Serial.print(_q.a);
-    //Serial.print(" X: "); Serial.print(_q.b);
-    //Serial.print(" Y: "); Serial.print(_q.c);
-    //Serial.print(" Z: "); Serial.print(_q.d);
-    //Serial.print(" deg: "); Serial.print(2.0*acos(_q.a)*180/PI);
-    //Serial.print(" norm: "); Serial.println(_q.norm());
-    //}
-
     Quaternion gravity(accelEvent.acceleration.x, accelEvent.acceleration.y, accelEvent.acceleration.z);
-
-    // Get the size of the vector before normalizing it.
     float currentAccel = gravity.norm() - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
     float currentAbsAccel = abs(currentAccel);
     _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
     if (elaspedMillis >= FHT_INTERVAL_MS) {
-        // clear interrupts when we are doing FHT
+        // Clear interrupts when we are doing FHT.
         cli();
         computeFht(currentAccel, elaspedMillis);
         sei();
@@ -91,7 +80,7 @@ bool Accel::Update() {
         Quaternion toRotateG = gravity.rotation_between_vectors(expected_gravity);
 
         // We want to subtract gravity from the magnetic reading.
-        // mag readings point into the earth quite a bit, but we don't really care about that.
+        // mag readings point into the earth quite a bit, but gravity is handled by accelerometer ok.
         // We just want to use mag for rotation around the gravity axis.
         // https://en.wikipedia.org/wiki/Earth%27s_magnetic_field#Inclination
         Quaternion expected_north = _q.conj().rotate(Quaternion(1, 0, 0));

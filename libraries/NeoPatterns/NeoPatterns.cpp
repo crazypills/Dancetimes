@@ -533,24 +533,6 @@ NeoPatterns::Blue(uint32_t color)
   return color & 0xFF;
 }
 
-uint32_t
-NeoPatterns::setRed(uint8_t red)
-{
-  return red << 16;
-}
-
-uint32_t
-NeoPatterns::setGreen(uint8_t green)
-{
-  return green << 8;
-}
-
-uint32_t
-NeoPatterns::setBlue(uint8_t blue)
-{
-  return blue;
-}
-
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
 uint32_t
@@ -621,19 +603,19 @@ NeoPatterns::setPixelColor(uint16_t n, uint32_t c)
 void
 NeoPatterns::setPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b)
 {
-  if ( BlankState )
-  {
-    uint32_t color = 0;
+  if ( BlankState ) {
     uint8_t brightness = Adafruit_NeoPixel::getBrightness();
     // attenuate rgb by brightness
     r = (r * brightness) >> 8;
     g = (g * brightness) >> 8;
     b = (b * brightness) >> 8;
     
-    color |= setRed(r);
-    color |= setGreen(g);
-    color |= setBlue(b);
-    
+    uint32_t color = 0;
+    color |= r;
+    color <<= 8;
+    color |= g;
+    color <<= 8;
+    color |= b;
     LastColors[n] = color;
   }
   else

@@ -46,7 +46,7 @@ Quaternion & Quaternion::normalize() {
 // This method takes an euler rotation in rad and converts it to an equivilent 
 // Quaternion rotation.
 // 800B
-Quaternion & Quaternion::from_euler_rotation(float x, float y, float z) {
+const Quaternion Quaternion::from_euler_rotation(float x, float y, float z) {
     float c1 = cos(y/2);
     float c2 = cos(z/2);
     float c3 = cos(x/2);
@@ -54,11 +54,12 @@ Quaternion & Quaternion::from_euler_rotation(float x, float y, float z) {
     float s1 = sin(y/2);
     float s2 = sin(z/2);
     float s3 = sin(x/2);
-    a = c1 * c2 * c3 - s1 * s2 * s3;
-    b = s1 * s2 * c3 + c1 * c2 * s3;
-    c = s1 * c2 * c3 + c1 * s2 * s3;
-    d = c1 * s2 * c3 - s1 * c2 * s3;
-    return *this;
+    Quaternion ret;
+    ret.a = c1 * c2 * c3 - s1 * s2 * s3;
+    ret.b = s1 * s2 * c3 + c1 * c2 * s3;
+    ret.c = s1 * c2 * c3 + c1 * s2 * s3;
+    ret.d = c1 * s2 * c3 - s1 * c2 * s3;
+    return ret;
 }
 
 const Quaternion Quaternion::conj() const {
@@ -100,7 +101,7 @@ const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const
     return ret;
 }
 
-const float Quaternion::dot_product(const Quaternion& q) const {
+float Quaternion::dot_product(const Quaternion& q) const {
     return a * q.a + b * q.b + c * q.c + d * q.d;
 }
 
