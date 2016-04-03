@@ -79,11 +79,11 @@ void loop()
     }
     else
     { 
-      float x,  y, z;
-      accel.getOrientation(x, y, z);     
-      x = abs(x);
-      y = abs(y);
-      z = abs(z);
+      //Quaternion device = accel.getDeviceOrientation(Quaternion(1, 0, 0));
+      Quaternion device = accel.getAbsoluteOrientation(Quaternion(1, 0, 0));
+      float x = abs(device.b);
+      float y = abs(device.c);
+      float z = abs(device.d);
       
       Single.Color1 = Stick.Color(x*32,y*32, z*32);
       Single.Update();

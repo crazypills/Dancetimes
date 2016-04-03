@@ -39,14 +39,13 @@ public:
     // Both the left and right hand sides must be pure vectors (a == 0)
     // Both the left and right hand sides must normalized already.
     // This computes the rotation that will tranform this to q.
-    const Quaternion rotation_between_vectors(const Quaternion& q) const;
+    const Quaternion rotation_between_vectors(const Quaternion& v) const;
     float dot_product(const Quaternion& q) const;
 
     // This method takes one vector and rotates it using this Quaternion.
     // The input must be a pure vector (a == 0)
     const Quaternion rotate(const Quaternion& q) const;
     Quaternion & fractional(float f);
-    const Quaternion getExpectedOrientation(const Quaternion &v) const;
 };
 
 #endif
