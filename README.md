@@ -8,3 +8,9 @@ cd ~/Documents/Arduino/libraries
 ln -s ~/usr/src/Dancetimes/libraries/Accel
 ln -s ~/usr/src/Dancetimes/libraries/NeoPatterns
 ```
+
+# Dependencies
+
+The Adafruit_LSM9DS0_Library is pulled into this repo and modified to remove the sensors api.
+This is done to reduce the code size because we are buttting up against the flash memory.
+This code is copyright Kevin Townsend for Adafruit Industries under the BSD license.
