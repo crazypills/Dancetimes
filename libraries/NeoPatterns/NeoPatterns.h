@@ -48,6 +48,7 @@ class NeoPatterns : public Adafruit_NeoPixel
     
     // Constructor - calls base-class constructor to initialize strip
     NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)());
+    ~NeoPatterns();
     // Update the pattern
     void Update();
 	// Blank turns off the lights and prevents them from making progress

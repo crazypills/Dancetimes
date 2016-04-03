@@ -9,6 +9,11 @@ NeoPatterns::NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*call
   BlankState = false;
 }
 
+NeoPatterns::~NeoPatterns() {
+    delete[] LastColors;
+}
+
+
 // Update the pattern
 void NeoPatterns::Update()
 {
