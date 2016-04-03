@@ -13,8 +13,8 @@ NeoPatterns::NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*call
 void NeoPatterns::Update()
 {
   if (millis() - LastUpdate > Interval * 2) {
-	  Serial.println("E: light time");
-	  Serial.print(Interval);
+	  Serial.print("E: light time: ");
+	  Serial.println (Interval);
   }
   
   // // Short circuit if the blank state is set
