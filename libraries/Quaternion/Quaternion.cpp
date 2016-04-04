@@ -1,4 +1,4 @@
-#include "quaternion.h"
+#include "Quaternion.h"
 #include "Arduino.h"
 
 // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/arithmetic/index.htm

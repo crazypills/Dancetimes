@@ -1,11 +1,9 @@
 #include "Accel.h"
 
-#define LOG_OUT 1
-#include <FHT.h>
-
 #define MOVING_AVERAGE_INTERVALS 20
 #define ACCEL_THRESHOLD 1
-#define COMPASS_AVERAGE_INTERVALS 10
+#define COMPASS_ROTATE_FRACTION 0.05
+#define ACCELEROMETER_FRACTION 0.1
 #define ACCELEROMETER_CALIBRATE 0
 #define MAG_CALIBRATE_X 0.7
 #define MAG_CALIBRATE_Y -0.5
@@ -34,7 +32,6 @@ bool Accel::Update() {
     }
     int elaspedMillis = newMillis - _lastUpdateMS;
     _lastUpdateMS = newMillis;
-    _count++;
 
     sensors_event_t accelEvent;
     sensors_event_t magEvent;
@@ -58,16 +55,9 @@ bool Accel::Update() {
     _q.normalize();
 
     Quaternion gravity(accelEvent.acceleration.x, accelEvent.acceleration.y, accelEvent.acceleration.z);
-    float currentAccel = gravity.norm() - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
-    float currentAbsAccel = abs(currentAccel);
-    _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS-1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
-    if (elaspedMillis >= FHT_INTERVAL_MS) {
-        // Clear interrupts when we are doing FHT.
-        cli();
-        computeFht(currentAccel, elaspedMillis);
-        sei();
-    }
-
+    _currentAccel = gravity.norm() - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
+    float currentAbsAccel = abs(_currentAccel);
+    _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS - 1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
     Quaternion expected_gravity = _q.conj().rotate(Quaternion(0, 0, 1));
 
     // Ignore gravity if it isn't around G.  We only want to update based on the accelrometer if we aren't bouncing.
@@ -91,85 +81,11 @@ bool Accel::Update() {
 
         Quaternion toRotateMag = mag.rotation_between_vectors(expected_north);
 
-        _q = _q * toRotateG.fractional(0.1);
-        _q = _q * toRotateMag.fractional(0.05);
+        _q = _q * toRotateG.fractional(ACCELEROMETER_FRACTION);
+        _q = _q * toRotateMag.fractional(COMPASS_ROTATE_FRACTION);
     }
 
     return true;
-}
-
-float normalize_rads(float angle_rad) {
-    if (angle_rad < 0) {
-        angle_rad += 2 * PI;
-    } else if (angle_rad >= 2*PI) {
-        angle_rad -= 2 * PI;
-    }
-    return angle_rad;
-}
-
-void Accel::computeFht(float lastValue, int elaspedMillis) {
-    lastValue *= 8000;
-    lastValue =  max(-32767, min(32767, lastValue));
-    for (int i = FHT_N - 2; i >= 0; i--) {
-        _old_fht[i+1] = _old_fht[i];
-        fht_input[i+1] = _old_fht[i];
-    }
-    fht_input[0] = (int) lastValue;
-    _old_fht[0] = (int) lastValue;
-    fht_window();
-    fht_reorder();
-    fht_run();
-    fht_mag_log();
-
-    int maxValue = 0;
-    int maxIndex = 0;
-    for (int i = 0; i < FHT_N/2; i++) {
-        uint8_t val = fht_log_out[i];
-        //int val = fht_lin_out[i];
-        if (val > maxValue) {
-            maxValue = val;
-            maxIndex = i;
-        }
-    }
-
-    int realPlusImg = fht_input[maxIndex];
-    int realMinusImg = maxIndex == 0 ? realPlusImg : fht_input[FHT_N - maxIndex];
-
-    float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg) + PI;
-
-    // Add the rate to our phase even in the case where we don't update the rate.
-    _phase_avg += _phaseRateAverage;
-
-    if (maxIndex == _old_max_index && maxIndex > 1) {
-        float phaseDiff = normalize_rads(phase - _old_phase);
-        //Serial.print("maxIndex: "); Serial.print(maxIndex);
-        //Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
-        //Serial.print("PhaseDBPM: "); Serial.println(phaseDiff/(2*PI) * 1000 / elaspedMillis * 60);
-        //Serial.print("Phase    : "); Serial.println(phase);
-
-        // Only update the rate if we are in the same fht bucket.
-        _phaseRateAverage = (((_phaseRateAverage * 19) + phaseDiff ) / 20);
-
-        if (phase + PI < _phase_avg) {
-            phase += 2*PI;
-        } else if (phase - PI > _phase_avg) {
-            phase -= 2*PI;
-        }
-
-        _phase_avg = (_phase_avg * 9 + phase) / 10;
-        _phase_avg = normalize_rads(_phase_avg);
-        //Serial.print("Phase    : "); Serial.println(phase);
-        //Serial.print("Phase Avg: "); Serial.println(_phase_avg);
-    }
-    _old_phase = phase;
-    _old_max_index = maxIndex;
-
-    // Serial.print("Phase Rate Avg: "); Serial.println(_phaseRateAverage);
-    //Serial.print("Phase    : "); Serial.println(phase);
-    //Serial.print("Phase Avg: "); Serial.println(_phase_avg);
-    //Serial.print("rate  Avg: "); Serial.println(_phaseRateAverage);
-    //Serial.print("hz    avg: "); Serial.println(_phaseRateAverage / (2.0 * PI) * 1000.0 / FHT_INTERVAL_MS);
-    //Serial.print("bpm   avg: "); Serial.println(_phaseRateAverage / (2.0 * PI) * 1000.0 / FHT_INTERVAL_MS * 60);
 }
 
 const Quaternion Accel::getDeviceOrientation(const Quaternion &absolutePosition) const {
@@ -180,15 +96,11 @@ const Quaternion Accel::getAbsoluteOrientation(const Quaternion &deviceVector) c
     return _q.rotate(deviceVector);
 }
 
-
-const float Accel::getPhasePercentage() const {
-    return _phase_avg/(2*PI);
+float Accel::getLinearAcceleration() const {
+    return _currentAccel;
 }
 
-const bool Accel::isDancing() const {
+bool Accel::isDancing() const {
     return  _avgAbsAccel > ACCEL_THRESHOLD;
 }
 
-const float Accel::getPhaseRatePercentage() const {
-    return _phaseRateAverage/(2*PI);
-}

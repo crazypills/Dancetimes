@@ -1,7 +1,7 @@
 #include <NeoPatterns.h>
 #include <Wire.h>
 #include <Accel.h>
-
+#include <Phase.h>
 
 #define ACCEL_INTERVAL_MS 50
 
@@ -11,6 +11,7 @@ void StickComplete();
 void SingleComplete();
 
 Accel accel(ACCEL_INTERVAL_MS);
+Phase phase(ACCEL_INTERVAL_MS);
 NeoPatterns Stick(1, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 
@@ -44,13 +45,14 @@ void loop()
     
     // Update the rings.
     // Single.Update();    
-	  bool didUpdate = accel.Update();
+    bool didUpdate = accel.Update();
     if (!didUpdate) {
       return; 
     }
+    phase.update(accel.getLinearAcceleration());
 
     if (accel.isDancing()) {
-      Single.SetIndex(accel.getPhasePercentage(), accel.getPhaseRatePercentage());
+      Single.SetIndex(phase.getPhasePercentage(), phase.getPhaseRatePercentage());
       Single.Update();
       //Single.ColorSet(Single.Wheel(random(255)));
       //Stick.ColorSet(Stick.Color(255, 0, 0));
@@ -81,9 +83,9 @@ void loop()
     { 
       //Quaternion device = accel.getDeviceOrientation(Quaternion(1, 0, 0));
       Quaternion device = accel.getAbsoluteOrientation(Quaternion(1, 0, 0));
-      float x = abs(device.b);
-      float y = abs(device.c);
-      float z = abs(device.d);
+      float x = device.b < 0 ? 0 : device.b;
+      float y = device.c < 0 ? 0 : device.c;
+      float z = device.d < 0 ? 0 : device.d;
       
       Single.Color1 = Stick.Color(x*32,y*32, z*32);
       Single.Update();
