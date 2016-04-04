@@ -68,7 +68,7 @@ void Phase::computeFht(float lastValue, int elaspedMillis) {
     // Add the rate to our phase even in the case where we don't update the rate.
     _phase_avg += _phaseRateAverage;
 
-    if (maxIndex == _old_max_index && maxIndex > 1) {
+    if (maxIndex == _old_max_index && maxIndex > 1 && maxIndex < FHT_N/2 - 5) {
         float phaseDiff = normalize_rads(phase - _old_phase);
         //Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
 
