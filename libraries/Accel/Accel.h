@@ -11,6 +11,7 @@ class Accel {
         uint32_t _intervalMS;
         float _avgAbsAccel;
         float _currentAccel;
+        int _count;
         Quaternion _q;
     public:
         Accel(uint32_t intervalMS) { _intervalMS = intervalMS; }

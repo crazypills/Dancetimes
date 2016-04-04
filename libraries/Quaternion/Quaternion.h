@@ -17,6 +17,9 @@ public:
     // We use standard right hand rule for rotations and coordinates.
     static const Quaternion from_euler_rotation(float x, float y, float z);
 
+    // This is like from_euler_rotation but for small angles (less than 45 deg (PI/4))
+    static const Quaternion from_euler_rotation_approx(float x, float y, float z);
+
     Quaternion & operator=(const Quaternion &rhs) {
         a = rhs.a;
         b = rhs.b;

@@ -5,13 +5,13 @@
 
 bool Phase::update(float linearAcceleration) {
     int newMillis = millis();
-    if ( newMillis - _lastUpdateMS > _intervalMS + 10) {
-        Serial.println("E: phase time");
+    int elaspedMillis = newMillis - _lastUpdateMS;
+    if (elaspedMillis > _intervalMS + 10) {
+        Serial.print("E: phase time: "); Serial.println(elaspedMillis);
     }
-    if (newMillis - _lastUpdateMS < _intervalMS) {
+    if (elaspedMillis < _intervalMS) {
         return false;
     }
-    int elaspedMillis = newMillis - _lastUpdateMS;
     _lastUpdateMS = newMillis;
 
     // Clear interrupts when we are doing FHT.
@@ -21,6 +21,8 @@ bool Phase::update(float linearAcceleration) {
     }
     sei();
 
+    //int lastMillis = millis();
+    //Serial.print("Phase time: "); Serial.println(lastMillis - newMillis);
     return true;
 }
 

@@ -12,21 +12,23 @@ NeoPatterns::NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*call
 // Update the pattern
 void NeoPatterns::Update()
 {
-  if (millis() - LastUpdate > Interval * 2) {
-	  Serial.print("E: light time: ");
-	  Serial.println (Interval);
+  int newMillis = millis();
+  int elaspedMillis = newMillis - LastUpdate;
+  if (elaspedMillis > Interval + 10) {
+    Serial.print("E: light time: "); Serial.println (elaspedMillis);
   }
   
+  if (elaspedMillis < Interval) {
+      return;
+  } 
+  LastUpdate = newMillis;
+
   // // Short circuit if the blank state is set
   // if ( BlankState == true )
   // {
   //   return;
   // }
   
-  if ((millis() - LastUpdate) > Interval) // time to update
-  {
-	
-	LastUpdate = millis();
     switch (ActivePattern)
     {
       case RAINBOW_CYCLE:
@@ -68,7 +70,6 @@ void NeoPatterns::Update()
       default:
 		break;
     }
-  }
 }
 
 void

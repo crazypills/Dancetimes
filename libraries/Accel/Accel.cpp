@@ -24,13 +24,13 @@ bool Accel::begin() {
 
 bool Accel::Update() {
     int newMillis = millis();
-    if ( newMillis - _lastUpdateMS > _intervalMS + 10) {
-        Serial.println("E: accel time");
+    int elaspedMillis = newMillis - _lastUpdateMS;
+    if ( elaspedMillis > _intervalMS + 10) {
+        Serial.print("E: accel time: "); Serial.println(elaspedMillis);
     }
-    if (newMillis - _lastUpdateMS < _intervalMS) {
+    if (elaspedMillis < _intervalMS) {
         return false;
     }
-    int elaspedMillis = newMillis - _lastUpdateMS;
     _lastUpdateMS = newMillis;
 
     sensors_event_t accelEvent;
@@ -50,41 +50,49 @@ bool Accel::Update() {
     float gyroy = gyroEvent.gyro.y * degPerSecToRads;
     float gyroz = gyroEvent.gyro.z * degPerSecToRads;
 
-    // Rotate by the gyro.
-    _q *= Quaternion::from_euler_rotation(gyrox, gyroy, gyroz);
+    // Rotate by the gyro. This line takes 2ms to convert and multiply.
+    _q *= Quaternion::from_euler_rotation_approx(gyrox, gyroy, gyroz);
     _q.normalize();
 
     Quaternion gravity(accelEvent.acceleration.x, accelEvent.acceleration.y, accelEvent.acceleration.z);
     _currentAccel = gravity.norm() - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
     float currentAbsAccel = abs(_currentAccel);
     _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS - 1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
-    Quaternion expected_gravity = _q.conj().rotate(Quaternion(0, 0, 1));
 
     // Ignore gravity if it isn't around G.  We only want to update based on the accelrometer if we aren't bouncing.
     // We also want to ignore gravity if the gyro is moving a lot.
     // TODO: carrino: make these defines at the top
     if (degPerSec < 90 && currentAbsAccel < 1) {
-        gravity.normalize();
-        Quaternion toRotateG = gravity.rotation_between_vectors(expected_gravity);
+        // cal expected gravity takes 1ms
+        Quaternion expected_gravity = _q.conj().rotate(Quaternion(0, 0, 1));
+        if (_count++ % 2 == 0) {
+            // This chunk of code takes 3ms
+            gravity.normalize();
+            Quaternion toRotateG = gravity.rotation_between_vectors(expected_gravity);
 
-        // We want to subtract gravity from the magnetic reading.
-        // mag readings point into the earth quite a bit, but gravity is handled by accelerometer ok.
-        // We just want to use mag for rotation around the gravity axis.
-        // https://en.wikipedia.org/wiki/Earth%27s_magnetic_field#Inclination
-        Quaternion expected_north = _q.conj().rotate(Quaternion(1, 0, 0));
-        expected_north += expected_gravity * (-expected_gravity.dot_product(expected_north));
-        expected_north.normalize();
+            _q = _q * toRotateG.fractional(ACCELEROMETER_FRACTION);
+        } else {
+            // This code path of code takes 5ms
 
-        Quaternion mag(magx, magy, magz);
-        mag += expected_gravity * (-expected_gravity.dot_product(mag));
-        mag.normalize();
+            // We want to subtract gravity from the magnetic reading.
+            // mag readings point into the earth quite a bit, but gravity is handled by accelerometer ok.
+            // We just want to use mag for rotation around the gravity axis.
+            // https://en.wikipedia.org/wiki/Earth%27s_magnetic_field#Inclination
+            Quaternion expected_north = _q.conj().rotate(Quaternion(1, 0, 0));
+            expected_north += expected_gravity * (-expected_gravity.dot_product(expected_north));
+            expected_north.normalize();
 
-        Quaternion toRotateMag = mag.rotation_between_vectors(expected_north);
+            Quaternion mag(magx, magy, magz);
+            mag += expected_gravity * (-expected_gravity.dot_product(mag));
+            mag.normalize();
 
-        _q = _q * toRotateG.fractional(ACCELEROMETER_FRACTION);
-        _q = _q * toRotateMag.fractional(COMPASS_ROTATE_FRACTION);
+            Quaternion toRotateMag = mag.rotation_between_vectors(expected_north);
+            _q = _q * toRotateMag.fractional(COMPASS_ROTATE_FRACTION);
+        }
     }
 
+    //int lastMillis = millis();
+    //Serial.print("Accel time: "); Serial.println(lastMillis - newMillis);
     return true;
 }
 

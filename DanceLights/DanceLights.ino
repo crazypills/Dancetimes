@@ -4,6 +4,7 @@
 #include <Phase.h>
 
 #define ACCEL_INTERVAL_MS 50
+#define PHASE_INTERVAL_MS 50
 
 // Define some NeoPatterns for the two rings and the stick
 //  as well as some completion routines
@@ -11,13 +12,12 @@ void StickComplete();
 void SingleComplete();
 
 Accel accel(ACCEL_INTERVAL_MS);
-Phase phase(ACCEL_INTERVAL_MS);
+Phase phase(PHASE_INTERVAL_MS);
 NeoPatterns Stick(1, 6, NEO_GRB + NEO_KHZ800, &StickComplete);
 NeoPatterns Single(1, 8, NEO_GRB + NEO_KHZ800, &SingleComplete);
 
 bool DirectionalThreshold;  //whether the compass threshold can be used
 bool Dance;                 //whether accelerometer is dancing hard enought to be used
-
 
 // Initialize everything and prepare to start
 void setup()
@@ -30,6 +30,7 @@ void setup()
     // Initialize all the pixelStrips
    Stick.begin();
    Single.begin();
+   Single.Interval = ACCEL_INTERVAL_MS;
     //Single.ActivePattern = RAINBOW_CYCLE;
 	 accel.begin();
     
@@ -44,11 +45,7 @@ void loop()
     // Read the sensors
     
     // Update the rings.
-    // Single.Update();    
     bool didUpdate = accel.Update();
-    if (!didUpdate) {
-      return; 
-    }
     phase.update(accel.getLinearAcceleration());
 
     if (accel.isDancing()) {

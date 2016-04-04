@@ -62,6 +62,24 @@ const Quaternion Quaternion::from_euler_rotation(float x, float y, float z) {
     return ret;
 }
 
+const Quaternion Quaternion::from_euler_rotation_approx(float x, float y, float z) {
+    // approximage cos(theta) as 1 - theta^2 / 2
+    float c1 = 1 - (y * y / 8);
+    float c2 = 1 - (z * z / 8);
+    float c3 = 1 - (x * x / 8);
+
+    // appromixate sin(theta) as theta
+    float s1 = y/2;
+    float s2 = z/2;
+    float s3 = x/2;
+    Quaternion ret;
+    ret.a = c1 * c2 * c3 - s1 * s2 * s3;
+    ret.b = s1 * s2 * c3 + c1 * c2 * s3;
+    ret.c = s1 * c2 * c3 + c1 * s2 * s3;
+    ret.d = c1 * s2 * c3 - s1 * c2 * s3;
+    return ret;
+}
+
 const Quaternion Quaternion::conj() const {
     Quaternion ret(*this);
     ret.b *= -1;
