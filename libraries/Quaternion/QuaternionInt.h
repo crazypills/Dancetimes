@@ -1,6 +1,8 @@
 #ifndef QUATERNION_INT_H
 #define QUATERNION_INT_H
 
+#include "Arduino.h"
+
 #define MAX_QUAT_INT_VALUE 0x7fff
 #define MIN_QUAT_INT_VALUE 0x8000
 #define BITS_TO_SHIFT_AFTER_MULT 15
@@ -10,6 +12,10 @@
 // value between -2^15 and 2^15-1.
 // ALL INSTANCES OF THIS CLASS MUST BE NORMALIZED (LENGTH 1) FOR MULTIPLICATIONS TO WORK.
 class QuaternionInt {
+private:
+    static int32_t m(int16_t a, int16_t b);
+    void normalize();
+    void normalizeVector(float newA);
 public:
     int16_t a;
     int16_t b;

@@ -82,9 +82,9 @@ const Quaternion Quaternion::from_euler_rotation_approx(float x, float y, float 
 
 const Quaternion Quaternion::conj() const {
     Quaternion ret(*this);
-    ret.b *= -1;
-    ret.c *= -1;
-    ret.d *= -1;
+    ret.b = -ret.b;
+    ret.c = -ret.c;
+    ret.d = -ret.d;
     return ret;
 }
 

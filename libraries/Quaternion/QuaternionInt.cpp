@@ -1,90 +1,66 @@
-#include "Quaternion.h"
-#include "Arduino.h"
+#include "QuaternionInt.h"
+
+int32_t QuaternionInt::m(int16_t a, int16_t b) {
+    int32_t ret = a;
+    ret *= b;
+    ret >>= BITS_TO_SHIFT_AFTER_MULT;
+    return ret;
+}
 
 // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/arithmetic/index.htm
 // 800B
-Quaternion & Quaternion::operator*=(const Quaternion &q) {
-    Quaternion ret;
-    ret.a = a*q.a - b*q.b - c*q.c - d*q.d;
-    ret.b = b*q.a + a*q.b + c*q.d - d*q.c;
-    ret.c = a*q.c - b*q.d + c*q.a + d*q.b;
-    ret.d = a*q.d + b*q.c - c*q.b + d*q.a;
+QuaternionInt & QuaternionInt::operator*=(const QuaternionInt &q) {
+    QuaternionInt ret;
+    ret.a = m(a, q.a) - m(b, q.b) - m(c, q.c) - m(d, q.d);
+    ret.b = m(b, q.a) + m(a, q.b) + m(c, q.d) - m(d, q.c);
+    ret.c = m(a, q.c) - m(b, q.d) + m(c, q.a) + m(d, q.b);
+    ret.d = m(a, q.d) + m(b, q.c) - m(c, q.b) + m(d, q.a);
     return (*this = ret);
 }
 
-Quaternion & Quaternion::operator+=(const Quaternion &q) {
-    a += q.a;
-    b += q.b;
-    c += q.c;
-    d += q.d;
-    return *this;
-}
 
-Quaternion & Quaternion::operator*=(float scale) {
-    a *= scale;
-    b *= scale;
-    c *= scale;
-    d *= scale;
-    return *this;
-}
+//Quaternion & Quaternion::operator+=(const Quaternion &q) {
+//    a += q.a;
+//    b += q.b;
+//    c += q.c;
+//    d += q.d;
+//    return *this;
+//}
+//
+//Quaternion & Quaternion::operator*=(float scale) {
+//    a *= scale;
+//    b *= scale;
+//    c *= scale;
+//    d *= scale;
+//    return *this;
+//}
 
-float Quaternion::norm() const {
-    float norm2 = a*a + b*b + c*c + d*d;
-    return sqrt(norm2);
-}
-
-// 400B
-Quaternion & Quaternion::normalize() {
-    float n = norm();
-    a /= n;
-    b /= n;
-    c /= n;
-    d /= n;
-    return *this;
-}
-
-// This method takes an euler rotation in rad and converts it to an equivilent 
-// Quaternion rotation.
-// 800B
-const Quaternion Quaternion::from_euler_rotation(float x, float y, float z) {
-    float c1 = cos(y/2);
-    float c2 = cos(z/2);
-    float c3 = cos(x/2);
-
-    float s1 = sin(y/2);
-    float s2 = sin(z/2);
-    float s3 = sin(x/2);
-    Quaternion ret;
-    ret.a = c1 * c2 * c3 - s1 * s2 * s3;
-    ret.b = s1 * s2 * c3 + c1 * c2 * s3;
-    ret.c = s1 * c2 * c3 + c1 * s2 * s3;
-    ret.d = c1 * s2 * c3 - s1 * c2 * s3;
-    return ret;
-}
-
-const Quaternion Quaternion::from_euler_rotation_approx(float x, float y, float z) {
+const QuaternionInt QuaternionInt::from_euler_rotation_approx(float x, float y, float z) {
+    int16_t int_x = x;
+    int16_t int_y = y;
+    int16_t int_z = z;
     // approximage cos(theta) as 1 - theta^2 / 2
-    float c1 = 1 - (y * y / 8);
-    float c2 = 1 - (z * z / 8);
-    float c3 = 1 - (x * x / 8);
+    int16_t c1 = MAX_QUAT_INT_VALUE - (m(int_y, int_y) >> 3);
+    int16_t c2 = MAX_QUAT_INT_VALUE - (m(int_z, int_z) >> 3);
+    int16_t c3 = MAX_QUAT_INT_VALUE - (m(int_x, int_x) >> 3);
 
     // appromixate sin(theta) as theta
-    float s1 = y/2;
-    float s2 = z/2;
-    float s3 = x/2;
-    Quaternion ret;
-    ret.a = c1 * c2 * c3 - s1 * s2 * s3;
-    ret.b = s1 * s2 * c3 + c1 * c2 * s3;
-    ret.c = s1 * c2 * c3 + c1 * s2 * s3;
-    ret.d = c1 * s2 * c3 - s1 * c2 * s3;
+    int16_t s1 = int_y >> 1;
+    int16_t s2 = int_z >> 1;
+    int16_t s3 = int_x >> 1;
+    QuaternionInt ret;
+    ret.a = m(m(c1, c2), c3) - m(m(s1, s2), s3);
+    ret.b = m(s1, m(s2, c3)) + m(m(c1, c2), s3);
+    ret.c = m(s1, m(c2, c3)) + m(m(c1, s2), s3);
+    ret.d = m(s2, m(c1, c3)) - m(s1, m(c2, s3));
     return ret;
 }
 
-const Quaternion Quaternion::conj() const {
-    Quaternion ret(*this);
-    ret.b = -ret.b
+const QuaternionInt QuaternionInt::conj() const {
+    QuaternionInt ret(*this);
+    ret.b = -ret.b;
     ret.c = -ret.c;
-    ret.d = -ret.d
+    ret.d = -ret.d;
     return ret;
 }
 
@@ -93,7 +69,7 @@ const Quaternion Quaternion::conj() const {
 // Both the left and right hand sides must normalized already.
 // This computes the rotation that will tranform this to q.
 // 500B
-const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const {
+const QuaternionInt QuaternionInt::rotation_between_vectors(const QuaternionInt& q) const {
     // http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/
     // We want to compute the below values.
     // w = 1 + v1•v2
@@ -113,18 +89,13 @@ const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const
 
     // From wikipedia https://en.wikipedia.org/wiki/Quaternion#Quaternions_and_the_geometry_of_R3
     // The cross product p x q is just the vector part of multiplying p * q
-    Quaternion ret = (*this) * q;
-    ret.a = 1 - ret.a;
-    ret.normalize();
+    QuaternionInt ret = (*this) * q;
+    ret.normalizeVector(static_cast<float>(MAX_QUAT_INT_VALUE) - ret.a);
     return ret;
 }
 
-float Quaternion::dot_product(const Quaternion& q) const {
-    return a * q.a + b * q.b + c * q.c + d * q.d;
-}
-
 // This will roate the input vector by this normalized rotation quaternion.
-const Quaternion Quaternion::rotate(const Quaternion& q) const {
+const QuaternionInt QuaternionInt::rotate(const QuaternionInt& q) const {
     return (*this) * q * conj();
 }
 
@@ -132,11 +103,26 @@ const Quaternion Quaternion::rotate(const Quaternion& q) const {
 // rotate between 0-1 as much as it would normally rotate.
 // The math here is pretty sloppy but should work for 
 // most cases.
-Quaternion & Quaternion::fractional(float f) {
-    a = 1-f + f*a;
-    b *= f;
-    c *= f;
-    d *= f;
-    return normalize();
+QuaternionInt & QuaternionInt::fractional(int16_t f) {
+    a = MAX_QUAT_INT_VALUE - f +  m(f, a);
+    b = m(b, f);
+    c = m(c, f);
+    d = m(d, f);
+    normalize();
+    return (*this);
+}
+
+void QuaternionInt::normalize() {
+    normalizeVector(a);
+}
+
+void QuaternionInt::normalizeVector(float newA) {
+    float norm2 = (m(b, b) + m(c, c) + m(d, d));
+    norm2 = norm2 + a * a;
+    float factor = MAX_QUAT_INT_VALUE/sqrt(norm2);
+    a = factor * newA;
+    b = factor * b;
+    c = factor * c;
+    d = factor * d;
 }
 
