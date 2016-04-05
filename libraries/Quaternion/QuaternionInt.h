@@ -16,6 +16,7 @@ private:
     static int32_t m(int16_t a, int16_t b);
     void normalize();
     void normalizeVector(float newA);
+    QuaternionInt(int x, int y, int z) { a = 0; b = x; c = y; d = z; }
 public:
     int16_t a;
     int16_t b;
@@ -24,14 +25,14 @@ public:
 
     QuaternionInt() {a = MAX_QUAT_INT_VALUE; b = c = d = 0;}
 
-    // This is a vector that can be rotated in Quaternion space.
-    QuaternionInt(int x, int y, int z);
 
     // This returns a Quaternion that rotates in each given axis in radians.
     // We use standard right hand rule for rotations and coordinates.
     // This behaves like from_euler_rotation but is only appropirate for small 
     // angles (less than 30 deg (abput .5 rad))
     static const QuaternionInt from_euler_rotation_approx(float x, float y, float z);
+    static const QuaternionInt create_north_facing() { return QuaternionInt(MAX_QUAT_INT_VALUE, 0, 0); }
+    static const QuaternionInt create_up_facing() { return QuaternionInt(0, 0, MAX_QUAT_INT_VALUE); }
 
     QuaternionInt & operator=(const QuaternionInt &rhs) {
         a = rhs.a;

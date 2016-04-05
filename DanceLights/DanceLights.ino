@@ -79,12 +79,9 @@ void loop()
     else
     { 
       //Quaternion device = accel.getDeviceOrientation(Quaternion(1, 0, 0));
-      Quaternion device = accel.getAbsoluteOrientation(Quaternion(1, 0, 0));
-      float x = device.b < 0 ? 0 : device.b;
-      float y = device.c < 0 ? 0 : device.c;
-      float z = device.d < 0 ? 0 : device.d;
+      QuaternionInt device = accel.getAbsoluteOrientation(QuaternionInt::create_north_facing());
       
-      Single.Color1 = Stick.Color(x*32,y*32, z*32);
+      Single.Color1 = Stick.Color(device.b & MAX_QUAT_INT_VALUE >> 10, device.c & MAX_QUAT_INT_VALUE >> 10, device.d & MAX_QUAT_INT_VALUE >> 10);
       Single.Update();
       if(Stick.ActivePattern != SCANNER)
       {

@@ -9,6 +9,9 @@
 #define MAG_CALIBRATE_Y -0.5
 #define MAG_INVERT_Z -1.0
 
+#define USE_ACCELEROMETER_THRESHOLD_M_PER_S2 1
+#define USE_ACCELEROMETER_THRESHOLD_DEG_PER_S 90
+
 bool Accel::begin() {
     // Try to initialise and warn if we couldn't detect the chip
     if (!_lsm.begin()) {
@@ -48,15 +51,15 @@ bool Accel::Update() {
     float magz = magEvent.magnetic.z * MAG_INVERT_Z; // For some reason z points the opposite of north.
 
     // Gyro is in degrees per second, so we change to rads and mult by dt to get rotation.
-    float degPerSec = Quaternion(gyroEvent.gyro.x, gyroEvent.gyro.y, gyroEvent.gyro.z).norm();
+    float degPerSecSquared = gyroEvent.gyro.x * gyroEvent.gyro.x + gyroEvent.gyro.y * gyroEvent.gyro.y + gyroEvent.gyro.z * gyroEvent.gyro.z;
     float degPerSecToRads = PI/180.0 * elaspedMillis / 1000.0;
     float gyrox = gyroEvent.gyro.x * degPerSecToRads;
     float gyroy = gyroEvent.gyro.y * degPerSecToRads;
     float gyroz = gyroEvent.gyro.z * degPerSecToRads;
 
     // Rotate by the gyro. This line takes 2ms to convert and multiply.
-    _q *= Quaternion::from_euler_rotation_approx(gyrox, gyroy, gyroz);
-    _q.normalize();
+    _q *= QuaternionInt::from_euler_rotation_approx(gyrox, gyroy, gyroz);
+    //_q.normalize();
 
     float accelSquared = accelx * accelx + accely * accely + accelz * accelz;
     _currentAccel = sqrt(accelSquared) - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
@@ -66,34 +69,35 @@ bool Accel::Update() {
     // Ignore gravity if it isn't around G.  We only want to update based on the accelrometer if we aren't bouncing.
     // We also want to ignore gravity if the gyro is moving a lot.
     // TODO: carrino: make these defines at the top
-    if (degPerSec < 90 && currentAbsAccel < 1) {
-        // cal expected gravity takes 1ms
-        Quaternion expected_gravity = _q.conj().rotate(Quaternion(0, 0, 1));
-        if (_count++ % 2 == 0) {
-            // This chunk of code takes 3ms
-            Quaternion gravity(accelEvent.acceleration.x, accelEvent.acceleration.y, accelEvent.acceleration.z);
-            gravity.normalize();
-            Quaternion toRotateG = gravity.rotation_between_vectors(expected_gravity);
+    if (degPerSecSquared < USE_ACCELEROMETER_THRESHOLD_DEG_PER_S * USE_ACCELEROMETER_THRESHOLD_DEG_PER_S 
+                && currentAbsAccel < USE_ACCELEROMETER_THRESHOLD_M_PER_S2) {
+        //// cal expected gravity takes 1ms
+        //Quaternion expected_gravity = _q.conj().rotate(QuaternionInt::create_up_facing());
+        //if (_count++ % 2 == 0) {
+        //    // This chunk of code takes 3ms
+        //    Quaternion gravity(accelEvent.acceleration.x, accelEvent.acceleration.y, accelEvent.acceleration.z);
+        //    gravity.normalize();
+        //    Quaternion toRotateG = gravity.rotation_between_vectors(expected_gravity);
 
-            _q = _q * toRotateG.fractional(ACCELEROMETER_FRACTION);
-        } else {
-            // This code path of code takes 5ms
+        //    _q = _q * toRotateG.fractional(ACCELEROMETER_FRACTION);
+        //} else {
+        //    // This code path of code takes 5ms
 
-            // We want to subtract gravity from the magnetic reading.
-            // mag readings point into the earth quite a bit, but gravity is handled by accelerometer ok.
-            // We just want to use mag for rotation around the gravity axis.
-            // https://en.wikipedia.org/wiki/Earth%27s_magnetic_field#Inclination
-            Quaternion expected_north = _q.conj().rotate(Quaternion(1, 0, 0));
-            expected_north += expected_gravity * (-expected_gravity.dot_product(expected_north));
-            expected_north.normalize();
+        //    // We want to subtract gravity from the magnetic reading.
+        //    // mag readings point into the earth quite a bit, but gravity is handled by accelerometer ok.
+        //    // We just want to use mag for rotation around the gravity axis.
+        //    // https://en.wikipedia.org/wiki/Earth%27s_magnetic_field#Inclination
+        //    Quaternion expected_north = _q.conj().rotate(QuaternionInt::create_north_facing());
+        //    expected_north += expected_gravity * (-expected_gravity.dot_product(expected_north));
+        //    expected_north.normalize();
 
-            Quaternion mag(magx, magy, magz);
-            mag += expected_gravity * (-expected_gravity.dot_product(mag));
-            mag.normalize();
+        //    Quaternion mag(magx, magy, magz);
+        //    mag += expected_gravity * (-expected_gravity.dot_product(mag));
+        //    mag.normalize();
 
-            Quaternion toRotateMag = mag.rotation_between_vectors(expected_north);
-            _q = _q * toRotateMag.fractional(COMPASS_ROTATE_FRACTION);
-        }
+        //    Quaternion toRotateMag = mag.rotation_between_vectors(expected_north);
+        //    _q = _q * toRotateMag.fractional(COMPASS_ROTATE_FRACTION);
+        //}
     }
 
     //int lastMillis = millis();
@@ -101,11 +105,11 @@ bool Accel::Update() {
     return true;
 }
 
-const Quaternion Accel::getDeviceOrientation(const Quaternion &absolutePosition) const {
+const QuaternionInt Accel::getDeviceOrientation(const QuaternionInt &absolutePosition) const {
     return _q.conj().rotate(absolutePosition);
 }
 
-const Quaternion Accel::getAbsoluteOrientation(const Quaternion &deviceVector) const {
+const QuaternionInt Accel::getAbsoluteOrientation(const QuaternionInt &deviceVector) const {
     return _q.rotate(deviceVector);
 }
 
