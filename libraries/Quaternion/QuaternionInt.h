@@ -13,10 +13,8 @@
 // ALL INSTANCES OF THIS CLASS MUST BE NORMALIZED (LENGTH 1) FOR MULTIPLICATIONS TO WORK.
 class QuaternionInt {
 private:
-    static int32_t m(int16_t a, int16_t b);
-    void normalize();
+    inline static int32_t m(int16_t a, int16_t b);
     void normalizeVector(float newA);
-    QuaternionInt(int x, int y, int z) { a = 0; b = x; c = y; d = z; }
 public:
     int16_t a;
     int16_t b;
@@ -24,7 +22,7 @@ public:
     int16_t d;
 
     QuaternionInt() {a = MAX_QUAT_INT_VALUE; b = c = d = 0;}
-
+    QuaternionInt(int x, int y, int z) { a = 0; b = x; c = y; d = z; }
 
     // This returns a Quaternion that rotates in each given axis in radians.
     // We use standard right hand rule for rotations and coordinates.
@@ -33,6 +31,9 @@ public:
     static const QuaternionInt from_euler_rotation_approx(float x, float y, float z);
     static const QuaternionInt create_north_facing() { return QuaternionInt(MAX_QUAT_INT_VALUE, 0, 0); }
     static const QuaternionInt create_up_facing() { return QuaternionInt(0, 0, MAX_QUAT_INT_VALUE); }
+    static const QuaternionInt from_vector(float x, float y, float z);
+
+    void normalize();
 
     QuaternionInt & operator=(const QuaternionInt &rhs) {
         a = rhs.a;

@@ -1,6 +1,6 @@
 #include "QuaternionInt.h"
 
-int32_t QuaternionInt::m(int16_t a, int16_t b) {
+inline int32_t QuaternionInt::m(int16_t a, int16_t b) {
     int32_t ret = a;
     ret *= b;
     ret >>= BITS_TO_SHIFT_AFTER_MULT;
@@ -36,9 +36,9 @@ QuaternionInt & QuaternionInt::operator*=(const QuaternionInt &q) {
 //}
 
 const QuaternionInt QuaternionInt::from_euler_rotation_approx(float x, float y, float z) {
-    int16_t int_x = x;
-    int16_t int_y = y;
-    int16_t int_z = z;
+    int16_t int_x = x * MAX_QUAT_INT_VALUE;
+    int16_t int_y = y * MAX_QUAT_INT_VALUE;
+    int16_t int_z = z * MAX_QUAT_INT_VALUE;
     // approximage cos(theta) as 1 - theta^2 / 2
     int16_t c1 = MAX_QUAT_INT_VALUE - (m(int_y, int_y) >> 3);
     int16_t c2 = MAX_QUAT_INT_VALUE - (m(int_z, int_z) >> 3);
@@ -94,6 +94,18 @@ const QuaternionInt QuaternionInt::rotation_between_vectors(const QuaternionInt&
     return ret;
 }
 
+const QuaternionInt QuaternionInt::from_vector(float x, float y, float z) {
+    float norm2 = x*x + y*y + z*z;
+    float norm = sqrt(norm2);
+    float factor = MAX_QUAT_INT_VALUE/norm;
+    QuaternionInt ret;
+    ret.a = 0;
+    ret.b = factor * x;
+    ret.c = factor * y;
+    ret.d = factor * z;
+    return ret;
+}
+
 // This will roate the input vector by this normalized rotation quaternion.
 const QuaternionInt QuaternionInt::rotate(const QuaternionInt& q) const {
     return (*this) * q * conj();
@@ -113,13 +125,28 @@ QuaternionInt & QuaternionInt::fractional(int16_t f) {
 }
 
 void QuaternionInt::normalize() {
-    normalizeVector(a);
+    float norm2 = (m(a, a) + m(b, b) + m(c, c) + m(d, d));
+    //Serial.print("norm2: "); Serial.println(norm2);
+    float factor = 1/sqrt(norm2/MAX_QUAT_INT_VALUE);
+    //Serial.print("factor: "); Serial.println(factor);
+    a = factor * a;
+    b = factor * b;
+    c = factor * c;
+    d = factor * d;
 }
 
 void QuaternionInt::normalizeVector(float newA) {
+    //Serial.print("norm: "); Serial.print(a);
+    //Serial.print(" newA: "); Serial.print(newA);
+    //Serial.print(" X: "); Serial.print(m(b,b));
+    //Serial.print(" Y: "); Serial.print(m(c,c));
+    //Serial.print(" Z: "); Serial.println(m(d,d));
+
     float norm2 = (m(b, b) + m(c, c) + m(d, d));
-    norm2 = norm2 + a * a;
-    float factor = MAX_QUAT_INT_VALUE/sqrt(norm2);
+    norm2 = norm2 + newA * newA / MAX_QUAT_INT_VALUE;
+    //Serial.print("norm2: "); Serial.println(norm2);
+    float factor = 1/sqrt(norm2/MAX_QUAT_INT_VALUE);
+    //Serial.print("factor: "); Serial.println(factor);
     a = factor * newA;
     b = factor * b;
     c = factor * c;

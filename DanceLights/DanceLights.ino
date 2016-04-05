@@ -47,6 +47,9 @@ void loop()
     // Update the rings.
     bool didUpdate = accel.Update();
     phase.update(accel.getLinearAcceleration());
+    if (!didUpdate) {
+        return;
+    }
 
     if (accel.isDancing()) {
       Single.SetIndex(phase.getPhasePercentage(), phase.getPhaseRatePercentage());
@@ -80,8 +83,15 @@ void loop()
     { 
       //Quaternion device = accel.getDeviceOrientation(Quaternion(1, 0, 0));
       QuaternionInt device = accel.getAbsoluteOrientation(QuaternionInt::create_north_facing());
+      // Serial.print("device: "); Serial.print(device.a);
+      // Serial.print(" X: "); Serial.print(device.b);
+      // Serial.print(" Y: "); Serial.print(device.c);
+      // Serial.print(" Z: "); Serial.println(device.d);
+      int r = device.b < 0 ? 0 : device.b >> 10;
+      int g = device.c < 0 ? 0 : device.c >> 10;
+      int b = device.d < 0 ? 0 : device.d >> 10;
       
-      Single.Color1 = Stick.Color(device.b & MAX_QUAT_INT_VALUE >> 10, device.c & MAX_QUAT_INT_VALUE >> 10, device.d & MAX_QUAT_INT_VALUE >> 10);
+      Single.Color1 = Stick.Color(r, g, b);
       Single.Update();
       if(Stick.ActivePattern != SCANNER)
       {
