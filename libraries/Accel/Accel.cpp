@@ -39,6 +39,10 @@ bool Accel::Update() {
     //sensors_event_t tempEvent;
     _lsm.getEvent(&accelEvent, &magEvent, &gyroEvent, NULL);
 
+    float accelx = accelEvent.acceleration.x;
+    float accely = accelEvent.acceleration.y;
+    float accelz = accelEvent.acceleration.z;
+
     float magx = magEvent.magnetic.x + MAG_CALIBRATE_X;
     float magy = magEvent.magnetic.y + MAG_CALIBRATE_Y;
     float magz = magEvent.magnetic.z * MAG_INVERT_Z; // For some reason z points the opposite of north.
@@ -54,8 +58,8 @@ bool Accel::Update() {
     _q *= Quaternion::from_euler_rotation_approx(gyrox, gyroy, gyroz);
     _q.normalize();
 
-    Quaternion gravity(accelEvent.acceleration.x, accelEvent.acceleration.y, accelEvent.acceleration.z);
-    _currentAccel = gravity.norm() - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
+    float accelSquared = accelx * accelx + accely * accely + accelz * accelz;
+    _currentAccel = sqrt(accelSquared) - SENSORS_GRAVITY_EARTH + ACCELEROMETER_CALIBRATE;
     float currentAbsAccel = abs(_currentAccel);
     _avgAbsAccel = (_avgAbsAccel * (MOVING_AVERAGE_INTERVALS - 1) + currentAbsAccel)/MOVING_AVERAGE_INTERVALS;
 
@@ -67,6 +71,7 @@ bool Accel::Update() {
         Quaternion expected_gravity = _q.conj().rotate(Quaternion(0, 0, 1));
         if (_count++ % 2 == 0) {
             // This chunk of code takes 3ms
+            Quaternion gravity(accelEvent.acceleration.x, accelEvent.acceleration.y, accelEvent.acceleration.z);
             gravity.normalize();
             Quaternion toRotateG = gravity.rotation_between_vectors(expected_gravity);
 

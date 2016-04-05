@@ -63,7 +63,7 @@ const Quaternion Quaternion::from_euler_rotation(float x, float y, float z) {
 }
 
 const Quaternion Quaternion::from_euler_rotation_approx(float x, float y, float z) {
-    // approximage cos(theta) as 1 - theta^2 / 2
+    // approximate cos(theta) as 1 - theta^2 / 2
     float c1 = 1 - (y * y / 8);
     float c2 = 1 - (z * z / 8);
     float c3 = 1 - (x * x / 8);
