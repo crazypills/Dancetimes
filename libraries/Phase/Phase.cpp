@@ -92,6 +92,10 @@ void Phase::computeFht(float lastValue, int elaspedMillis) {
     //Serial.print("bpm   avg: "); Serial.println(_phaseRateAverage / (2.0 * PI) * 1000.0 / FHT_INTERVAL_MS * 60);
 }
 
+float Phase::getPhase() const {
+    return _phase_avg;
+}
+
 float Phase::getPhasePercentage() const {
     return _phase_avg/(2*PI);
 }
