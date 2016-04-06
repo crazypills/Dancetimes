@@ -7,6 +7,9 @@ This project also depends on the FHT library found here [ArduinoFHT2.zip](http:/
 cd ~/Documents/Arduino/libraries
 ln -s ~/usr/src/Dancetimes/libraries/Accel
 ln -s ~/usr/src/Dancetimes/libraries/NeoPatterns
+ln -s ~/usr/src/Dancetimes/libraries/Quaternion
+ln -s ~/usr/src/Dancetimes/libraries/Phase
+ln -s ~/usr/src/Dancetimes/libraries/Adafruit_LSM9DS0_Library
 ```
 
 # Dependencies

@@ -18,7 +18,12 @@ class Phase {
     public:
         Phase(uint32_t intervalMS) { _intervalMS = intervalMS; }
         bool update(float linearAcceleration);
+
+        // This is between 0 and 1
         float getPhasePercentage() const;
+
+        // This is between 0 and 2*PI
+        float getPhase() const;
         float getPhaseRatePercentage() const;
 };
 
