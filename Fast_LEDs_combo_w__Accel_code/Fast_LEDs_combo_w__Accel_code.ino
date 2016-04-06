@@ -10,17 +10,18 @@ FASTLED_USING_NAMESPACE
 Accel accel(ACCEL_INTERVAL_MS);
 Phase phase(PHASE_INTERVAL_MS);
 #if FASTLED_VERSION < 3001000
+
 #error "Requires FastLED 3.1 or later; check github for latest code."
 #endif
 
-#define DATA_PIN    6
+#define DATA_PIN    8
 //#define CLK_PIN   4
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define NUM_LEDS    36
+#define NUM_LEDS    1
 CRGB leds[NUM_LEDS];
 
-#define BRIGHTNESS          96
+#define BRIGHTNESS          127
 #define FRAMES_PER_SECOND  120
 bool DirectionalThreshold;  //whether the compass threshold can be used
 bool Dance;                 //whether accelerometer is dancing hard enought to be used
@@ -35,6 +36,8 @@ void setup() {
      // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+
+    FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
   // set master brightness control
   FastLED.setBrightness(BRIGHTNESS);
@@ -117,7 +120,8 @@ void nextPattern()
 void rainbow() 
 {
   // FastLED's built-in rainbow generator
-  fill_rainbow( leds, NUM_LEDS, gHue, 7);
+  //fill_rainbow( leds, NUM_LEDS, gHue, 7);
+  fill_gradient( leds, NUM_LEDS, CHSV (gHue,255,127), CHSV(gHue + 128,255,127));
 }
 
 void rainbowWithGlitter() 
@@ -146,7 +150,8 @@ void sinelon()
 {
   // a colored dot sweeping back and forth, with fading trails
   fadeToBlackBy( leds, NUM_LEDS, 10);
-  int pos = beatsin16(13,0,NUM_LEDS);
+    int pos = beatsin16(7,0,NUM_LEDS);
+    //int pos = beat16(13);
   leds[pos] += CHSV( gHue, 255, 192);
 }
 
@@ -162,12 +167,16 @@ void bpm()
 }
 
 void juggle() {
-  // eight colored dots, weaving in and out of sync with each other
-  fadeToBlackBy( leds, NUM_LEDS, 20);
-  byte dothue = 0;
-  for( int i = 0; i < 8; i++) {
-    leds[beatsin16(i+7,0,NUM_LEDS)] |= CHSV(dothue, 200, 255);
-    dothue += 32;
+//  // eight colored dots, weaving in and out of sync with each other
+//  fadeToBlackBy( leds, NUM_LEDS, 20);
+//  byte dothue = 0;
+//  for( int i = 0; i < 8; i++) {
+//    leds[beatsin16(i+7,0,NUM_LEDS)] |= CHSV(dothue, 200, 255);
+//    dothue += 32;
+//  }
+  for (int i = 0; i < NUM_LEDS; i++)
+  {
+    leds[i] = CHSV (gHue, 255,127);
   }
 }
 
