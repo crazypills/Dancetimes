@@ -14,33 +14,37 @@ Phase phase(PHASE_INTERVAL_MS);
 #error "Requires FastLED 3.1 or later; check github for latest code."
 #endif
 
-#define DATA_PIN    8
+#define DATA_PIN    6
 //#define CLK_PIN   4
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define NUM_LEDS    1
+#define NUM_LEDS    30
 CRGB leds[NUM_LEDS];
 
 #define BRIGHTNESS          127
 #define FRAMES_PER_SECOND  120
 bool DirectionalThreshold;  //whether the compass threshold can be used
 bool Dance;                 //whether accelerometer is dancing hard enought to be used
-
+unsigned long Interval;
+unsigned long LastUpdate;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
    accel.begin();
+   LastUpdate = millis();
+   Interval = (1000/FRAMES_PER_SECOND);
    pinMode(10, INPUT_PULLUP);
    pinMode(9, INPUT_PULLUP);
      // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
-    FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  //FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
   // set master brightness control
   FastLED.setBrightness(BRIGHTNESS);
+  
 }
 typedef void (*SimplePatternList[])();
 SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
@@ -54,55 +58,40 @@ void loop() {
   
    bool didUpdate = accel.Update();
     phase.update(accel.getLinearAcceleration());
-    FastLED.show();
-    EVERY_N_MILLISECONDS ( 30)
+
+    EVERY_N_MILLISECONDS ( 30 )
     {
       gHue++;
     }
-    if (accel.isDancing()) {
-//      Single.SetIndex(phase.getPhasePercentage(), phase.getPhaseRatePercentage());
-//      Single.Update();
-//      //Single.ColorSet(Single.Wheel(random(255)));
-//      //Stick.ColorSet(Stick.Color(255, 0, 0));
-//      if (Stick.ActivePattern != FOLLOWER) {
-//        Stick.Follower(Stick.Color(0,255,0),40,2);
-        computed_bpm(phase.getPhasePercentage() * 256);
-     }
-    
-//      Stick.Update();
-     else if (digitalRead(9) == LOW) {
-//      if(Stick.ActivePattern != FOLLOWER)
-//      {
-//        Stick.Follower(Stick.Color(255,0,255),200,5);
-//      }
-//      Stick.Update();
-        sinelon();
-        
-    }
-    // Update the rings.
-    //Single.ActivePattern = RAINBOW_CYCLE;
-    else if (digitalRead(10) == LOW)
+    if (millis() - LastUpdate > Interval)
     {
-        confetti();
-    }
-    else
-    { 
-      //Quaternion device = accel.getDeviceOrientation(Quaternion(1, 0, 0));
-      Quaternion device = accel.getAbsoluteOrientation(Quaternion(1, 0, 0));
-      float x = device.b < 0 ? 0 : device.b;
-      float y = device.c < 0 ? 0 : device.c;
-      float z = device.d < 0 ? 0 : device.d;
-      
-//      Single.Color1 = Stick.Color(x*32,y*32, z*32);
-//      Single.Update();
-////      if(Stick.ActivePattern != SCANNER)
-////      {
-////        Stick.Scanner(Stick.Color(0,255,0),70);
-////      }
-//    //Stick.Interval = 20;
-//    Stick.Color1=Stick.Color(x*32,y*32, z*32);
-//      Stick.Update();
-        rgb(x*64, y*64, z*64);
+        LastUpdate = millis();
+        FastLED.show();
+        if (accel.isDancing()) {
+
+            computed_bpm(phase.getPhasePercentage() * 256);
+         }
+        
+         else if (digitalRead(9) == LOW) {
+
+            sinelon();
+            
+        }
+
+        else if (digitalRead(10) == LOW)
+        {
+            confetti();
+        }
+        else
+        { 
+          //Quaternion device = accel.getDeviceOrientation(Quaternion(1, 0, 0));
+          Quaternion device = accel.getAbsoluteOrientation(Quaternion(1, 0, 0));
+          float x = device.b < 0 ? 0 : device.b;
+          float y = device.c < 0 ? 0 : device.c;
+          float z = device.d < 0 ? 0 : device.d;
+
+            rgb(x*64, y*64, z*64);
+        }
     }
 }
 
@@ -146,13 +135,15 @@ void confetti()
   leds[pos] += CHSV( gHue + random8(64), 200, 255);
 }
 
-void sinelon()
+void sinelon()  
 {
   // a colored dot sweeping back and forth, with fading trails
   fadeToBlackBy( leds, NUM_LEDS, 10);
-    int pos = beatsin16(7,0,NUM_LEDS);
+    int pos = beatsin16(15,0,NUM_LEDS);
     //int pos = beat16(13);
   leds[pos] += CHSV( gHue, 255, 192);
+  leds[NUM_LEDS-pos] += CHSV( gHue, 255, 192);
+  
 }
 
 void bpm()
@@ -169,7 +160,8 @@ void bpm()
 void computed_bpm(uint8_t beat)
 {
   // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
-  CRGBPalette16 palette = PartyColors_p;
+  //CRGBPalette16 palette = PartyColors_p;
+  CRGBPalette16 palette = CloudColors_p;
   //uint8_t beat = beatsin8( BeatsPerMinute, 64, 255);
   for( int i = 0; i < NUM_LEDS; i++) { //9948
     leds[i] = ColorFromPalette(palette, gHue+(i*2), beat-gHue+(i*10));
