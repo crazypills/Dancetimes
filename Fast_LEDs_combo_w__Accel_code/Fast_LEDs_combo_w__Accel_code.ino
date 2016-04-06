@@ -102,7 +102,7 @@ void loop() {
 //    //Stick.Interval = 20;
 //    Stick.Color1=Stick.Color(x*32,y*32, z*32);
 //      Stick.Update();
-        juggle();
+        rgb(x*64, y*64, z*64);
     }
 }
 
@@ -173,6 +173,13 @@ void computed_bpm(uint8_t beat)
   //uint8_t beat = beatsin8( BeatsPerMinute, 64, 255);
   for( int i = 0; i < NUM_LEDS; i++) { //9948
     leds[i] = ColorFromPalette(palette, gHue+(i*2), beat-gHue+(i*10));
+  }
+}
+
+void rgb(uint8_t r, uint8_t g, uint8_t b) {
+  for (int i = 0; i < NUM_LEDS; i++)
+  {
+    leds[i] = CRGB (r, g, b);
   }
 }
 
