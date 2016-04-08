@@ -18,11 +18,13 @@ Phase phase(PHASE_INTERVAL_MS);
 //#define CLK_PIN   4
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define NUM_LEDS    30
+#define NUM_LEDS    20
 CRGB leds[NUM_LEDS];
 
 #define BRIGHTNESS          127
 #define FRAMES_PER_SECOND  120
+#define CYCLES_PER_SECOND  .8
+#define NUMBER_OF_CYCLES   4
 bool DirectionalThreshold;  //whether the compass threshold can be used
 bool Dance;                 //whether accelerometer is dancing hard enought to be used
 unsigned long Interval;
@@ -47,7 +49,7 @@ void setup() {
   
 }
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
+SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm , sineOnSine , testWave, sineOnSinePrime};
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
@@ -74,7 +76,7 @@ void loop() {
         
          else if (digitalRead(9) == LOW) {
 
-            sinelon();
+            sineOnSine();
             
         }
 
@@ -90,7 +92,10 @@ void loop() {
           float y = device.c < 0 ? 0 : device.c;
           float z = device.d < 0 ? 0 : device.d;
 
-            rgb(x*64, y*64, z*64);
+            //rgb(x*64, y*64, z*64);
+          //sineOnSine();
+          //testWave();
+          rainbow();
         }
     }
 }
@@ -132,7 +137,8 @@ void confetti()
   // random colored speckles that blink in and fade smoothly
   fadeToBlackBy( leds, NUM_LEDS, 10);
   int pos = random16(NUM_LEDS);
-  leds[pos] += CHSV( gHue + random8(64), 200, 255);
+  leds[pos] += CHSV( gHue + random8(64), 200, 127);
+  addGlitter(20);
 }
 
 void sinelon()  
@@ -186,6 +192,41 @@ void juggle() {
   for (int i = 0; i < NUM_LEDS; i++)
   {
     leds[i] = CHSV (gHue, 255,127);
+  }
+}
+
+void sineOnSine(){
+    fadeToBlackBy( leds, NUM_LEDS, 30);
+  int pos = beatsin16(6,0,NUM_LEDS/2);
+  int pos2 = beatsin16( 40 , pos , (NUM_LEDS-pos));
+  //leds[pos] += CHSV( gHue, 200, 255);
+  for (int i = 0; i < pos ; i++)
+  {
+    leds[i] += CHSV(gHue+64,255,127); 
+    leds[NUM_LEDS-i] += CHSV(gHue+192,255,127);
+  }
+  leds[pos2] += CHSV(gHue, 255, 127);
+  blur1d( leds, NUM_LEDS, 31);
+}
+void sineOnSinePrime(){
+    fadeToBlackBy( leds, NUM_LEDS, 30);
+  int pos = beatsin16(6,0,NUM_LEDS/2);
+  int pos2 = beatsin16( 40 , pos , (NUM_LEDS-pos));
+  //leds[pos] += CHSV( gHue, 200, 255);
+  for (int i = 0; i < pos ; i++)
+  {
+    leds[i] = CHSV(gHue+64,255,beatsin16(180*CYCLES_PER_SECOND,0,255,((65535/NUM_LEDS)*i)/(100/NUMBER_OF_CYCLES))); 
+    leds[NUM_LEDS-i] = CHSV(gHue+192,255,beatsin16(180*CYCLES_PER_SECOND,0,255,((65535/NUM_LEDS)*i)/(100/NUMBER_OF_CYCLES)));
+  }
+  leds[pos2] += CHSV(gHue, 255, 127);
+  //blur1d( leds, NUM_LEDS, 31);
+}
+
+void testWave(){
+  //fadeToBlackBy ( leds, NUM_LEDS, 30);
+  //int amp = beatsin16(14,0,255);
+  for (int i = 0; i < NUM_LEDS ; i ++) {
+    leds[i] = CHSV (gHue + (256*i/NUM_LEDS) , 122 , beatsin16(60*CYCLES_PER_SECOND,0,255,((65535/NUM_LEDS)*i)/(100/NUMBER_OF_CYCLES)));
   }
 }
 
