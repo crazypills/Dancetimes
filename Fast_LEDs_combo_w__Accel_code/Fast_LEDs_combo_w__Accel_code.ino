@@ -25,10 +25,21 @@ CRGB leds[NUM_LEDS];
 #define FRAMES_PER_SECOND  120
 #define CYCLES_PER_SECOND  .8
 #define NUMBER_OF_CYCLES   4
+#define NUMBER_OF_OCEAN_BITS  5
 bool DirectionalThreshold;  //whether the compass threshold can be used
 bool Dance;                 //whether accelerometer is dancing hard enought to be used
 unsigned long Interval;
 unsigned long LastUpdate;
+int activeOceanBits = 0;
+
+byte oceanBitRate[NUMBER_OF_OCEANBITS];
+uint16 oceanBitPhase[NUMBER_OF_OCEANBITS];
+byte oceanBitPhaseRate [NUMBER_OF_OCEANBITS];
+direction oceanBitDirection [NUMBER_OF_OCEANBITS];
+
+
+
+enum  direction { FORWARD, REVERSE };
 
 void setup() {
   // put your setup code here, to run once:
@@ -95,7 +106,8 @@ void loop() {
             //rgb(x*64, y*64, z*64);
           //sineOnSine();
           //testWave();
-          rainbow();
+          //rainbow();
+          oceanBottom();
         }
     }
 }
@@ -228,5 +240,50 @@ void testWave(){
   for (int i = 0; i < NUM_LEDS ; i ++) {
     leds[i] = CHSV (gHue + (256*i/NUM_LEDS) , 122 , beatsin16(60*CYCLES_PER_SECOND,0,255,((65535/NUM_LEDS)*i)/(100/NUMBER_OF_CYCLES)));
   }
+}
+
+void oceanBottom()
+{
+    CRGBPalette16 palette = OceanColors_p;
+   if ( activeOceanBits < NUMBER_OF_OCEAN_BITS )
+   {
+      //create a new moving bit
+      oceanBitRate[activeOceanBits] = 1+random8(4);
+      oceanBitPhase[activeOceanBits] = random8(65536);
+      oceanBitPhaseRate[activeOceanBits] = random8(5);
+      activeOceanBits++;
+   }
+
+   for ( int = 0; i < activeOceanBits; i++)
+   {
+    if (beatsin16(oceanBitRate[i],0,NUM_LEDS) == NUM_LEDS)
+    {
+      
+    }
+   }
+
+    for ( int = 0; i < NUM_LEDS; i ++)
+    {
+      if( oceanBitDirection[i] == FORWARD)
+      {
+      
+        leds[beatsin16(oceanBitRate[i],0,NUM_LEDS)] = ColorFromPalette(palette, beatsin16(6,0,255,oceanBitPhase[i]+oceanBitPhaseRate[i]*2000), 255); 
+      }
+    
+      else
+      {
+        leds[NUM_LEDS-beatsin16(oceanBitRate[i],0,NUM_LEDS)] = ColorFromPalette(palette, beatsin16(6,0,255,oceanBitPhase[i]+oceanBitPhaseRate[i]*2000), 255); 
+      }
+    }
+    
+    
+    
+}
+
+
+void oceanTop()
+{
+
+  
 }
 
