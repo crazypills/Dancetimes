@@ -58,12 +58,16 @@ void loop() {
   // put your main code here, to run repeatedly:
 
   
-   bool didUpdate = accel.Update();
-    phase.update(accel.getLinearAcceleration());
-
-    EVERY_N_MILLISECONDS ( 30 )
+    accel.Update();
+    bool phaseRollOver = phase.update(accel.getLinearAcceleration());
+    if (!accel.isDancing())
     {
-      gHue++;
+        EVERY_N_MILLISECONDS ( 30)
+        {
+          gHue++;
+        }
+    } else if (phaseRollOver) {
+        gHue++;
     }
     if (millis() - LastUpdate > Interval)
     {

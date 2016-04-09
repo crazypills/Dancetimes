@@ -15,15 +15,16 @@ bool Phase::update(float linearAcceleration) {
     _lastUpdateMS = newMillis;
 
     // Clear interrupts when we are doing FHT.
+    bool ret;
     cli();
     {
-        computeFht(linearAcceleration, elaspedMillis);
+        ret = computeFht(linearAcceleration, elaspedMillis);
     }
     sei();
 
     //int lastMillis = millis();
     //Serial.print("Phase time: "); Serial.println(lastMillis - newMillis);
-    return true;
+    return ret;
 }
 
 float normalize_rads(float angle_rad) {
@@ -35,7 +36,7 @@ float normalize_rads(float angle_rad) {
     return angle_rad;
 }
 
-void Phase::computeFht(float lastValue, int elaspedMillis) {
+bool Phase::computeFht(float lastValue, int elaspedMillis) {
     lastValue *= 8000;
     lastValue =  max(-32767, min(32767, lastValue));
     for (int i = FHT_N - 2; i >= 0; i--) {
@@ -65,6 +66,7 @@ void Phase::computeFht(float lastValue, int elaspedMillis) {
 
     float phase = atan2(realPlusImg - realMinusImg, realPlusImg + realMinusImg) + PI;
 
+    float prev_phase_avg = _phase_avg;
     // Add the rate to our phase even in the case where we don't update the rate.
     _phase_avg += _phaseRateAverage;
 
@@ -90,6 +92,7 @@ void Phase::computeFht(float lastValue, int elaspedMillis) {
     _old_max_index = maxIndex;
 
     //Serial.print("bpm   avg: "); Serial.println(_phaseRateAverage / (2.0 * PI) * 1000.0 / FHT_INTERVAL_MS * 60);
+    return _phase_avg < prev_phase_avg;
 }
 
 float Phase::getPhase() const {
@@ -103,3 +106,4 @@ float Phase::getPhasePercentage() const {
 float Phase::getPhaseRatePercentage() const {
     return _phaseRateAverage/(2*PI);
 }
+

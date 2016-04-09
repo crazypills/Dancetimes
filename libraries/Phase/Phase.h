@@ -9,7 +9,7 @@ class Phase {
     protected:
         uint32_t _lastUpdateMS;
         uint32_t _intervalMS;
-        void computeFht(float newValue, int elaspedMillis);
+        bool computeFht(float newValue, int elaspedMillis);
         int _old_fht[FHT_N];
         float _old_phase;
         float _phase_avg;
@@ -17,6 +17,8 @@ class Phase {
         float _phaseRateAverage;
     public:
         Phase(uint32_t intervalMS) { _intervalMS = intervalMS; }
+
+        // The return value here is if this phase looped around from 2*PI to 0
         bool update(float linearAcceleration);
 
         // This is between 0 and 1
