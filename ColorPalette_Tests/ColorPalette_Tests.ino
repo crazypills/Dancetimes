@@ -1,11 +1,13 @@
 #include <FastLED.h>
 
 #define LED_PIN     6
-#define NUM_LEDS    24
+#define NUM_LEDS    44
+#define NUM_LEDS2   24
 #define BRIGHTNESS  64
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 CRGB leds[NUM_LEDS];
+CRGB ringLeds[NUM_LEDS2];
 
 #define UPDATES_PER_SECOND 100
 
@@ -99,6 +101,7 @@ extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
 void setup() {
     delay( 3000 ); // power-up safety delay
     FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+    FastLED.addLeds<LED_TYPE, 12, COLOR_ORDER>(ringLeds, NUM_LEDS2).setCorrection( TypicalLEDStrip );
     FastLED.setBrightness(  BRIGHTNESS );
     
     currentPalette = bhw1_26_gp;
@@ -125,7 +128,11 @@ void FillLEDsFromPaletteColors( uint8_t colorIndex)
     
     for( int i = 0; i < NUM_LEDS; i++) {
         leds[i] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
-        colorIndex += 6;
+        colorIndex += 3;
+    }
+        for( int i = 0; i < NUM_LEDS2; i++) {
+        ringLeds[i] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+        colorIndex += 12;
     }
 }
 
@@ -147,15 +154,15 @@ void ChangePalettePeriodically()
         lastSecond = secondHand;
         if( secondHand ==  0)  { currentPalette = GMT_ocean_gp;         currentBlending = LINEARBLEND; }
         if( secondHand == 10)  { currentPalette = purplefly_gp;   currentBlending = NOBLEND;  }
-        if( secondHand == 15)  { currentPalette = bhw2_38_gp;   currentBlending = LINEARBLEND; }
-        if( secondHand == 20)  { currentPalette = bhw1_26_gp;             currentBlending = LINEARBLEND; }
-        if( secondHand == 25)  { SetupTotallyRandomPalette();              currentBlending = LINEARBLEND; }
-        if( secondHand == 30)  { SetupBlackAndWhiteStripedPalette();       currentBlending = NOBLEND; }
-        if( secondHand == 35)  { SetupBlackAndWhiteStripedPalette();       currentBlending = LINEARBLEND; }
-        if( secondHand == 40)  { currentPalette = CloudColors_p;           currentBlending = LINEARBLEND; }
-        if( secondHand == 45)  { currentPalette = PartyColors_p;           currentBlending = LINEARBLEND; }
-        if( secondHand == 50)  { currentPalette = myRedWhiteBluePalette_p; currentBlending = NOBLEND;  }
-        if( secondHand == 55)  { currentPalette = myRedWhiteBluePalette_p; currentBlending = LINEARBLEND; }
+        if( secondHand == 15)  { currentPalette = purplefly_gp;   currentBlending = LINEARBLEND; }
+        if( secondHand == 20)  { currentPalette = bhw2_38_gp;             currentBlending = NOBLEND; }
+        if( secondHand == 25)  { currentPalette = bhw2_38_gp;              currentBlending = LINEARBLEND; }
+        if( secondHand == 30)  { currentPalette = bhw1_26_gp;       currentBlending = NOBLEND; }
+        if( secondHand == 35)  { currentPalette = bhw1_26_gp;       currentBlending = LINEARBLEND; }
+        if( secondHand == 40)  { currentPalette = CloudColors_p;           currentBlending = NOBLEND; }
+        if( secondHand == 45)  { currentPalette = CloudColors_p;           currentBlending = LINEARBLEND; }
+        if( secondHand == 50)  { currentPalette = PartyColors_p; currentBlending = NOBLEND;  }
+        if( secondHand == 55)  { currentPalette = PartyColors_p; currentBlending = LINEARBLEND; }
     }
 }
 

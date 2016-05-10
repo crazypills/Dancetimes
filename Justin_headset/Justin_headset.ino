@@ -34,7 +34,7 @@ DEFINE_GRADIENT_PALETTE( bhw1_26_gp ) {
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 #define NUM_LEDS    20
-#define NUM_LEDS2   21
+#define NUM_LEDS2   16
 CRGB leds[NUM_LEDS];
 CRGB shortsLeds[NUM_LEDS2];
 CRGBPalette16 currentPalette;

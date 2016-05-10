@@ -34,9 +34,9 @@ DEFINE_GRADIENT_PALETTE( bhw1_26_gp ) {
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 #define NUM_LEDS    20
-#define NUM_LEDS2   21
+#define NUM_LEDS2   24
 CRGB leds[NUM_LEDS];
-CRGB shortsLeds[NUM_LEDS2];
+CRGB bustleBag[NUM_LEDS2];
 CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 
@@ -49,7 +49,7 @@ void setup() {
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.addLeds<LED_TYPE,DATA_PIN2,COLOR_ORDER>(shortsLeds, NUM_LEDS2).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<LED_TYPE,DATA_PIN2,COLOR_ORDER>(bustleBag, NUM_LEDS2).setCorrection(TypicalLEDStrip);
 
   // set master brightness control
   FastLED.setBrightness(BRIGHTNESS);
@@ -91,7 +91,7 @@ void nextPattern()
 void rainbow() 
 {
     fill_gradient( leds, NUM_LEDS, CHSV (gHue,255,255), CHSV(gHue + 128,255,255));
-    fill_gradient( shortsLeds, NUM_LEDS2, CHSV (gHue,255,255), CHSV(gHue + 128,255,255));
+    fill_gradient( bustleBag, NUM_LEDS2, CHSV (gHue,255,255), CHSV(gHue + 128,255,255));
 }
 
 void rainbowWithGlitter() 
@@ -105,7 +105,7 @@ void addGlitter( fract8 chanceOfGlitter)
 {
   if( random8() < chanceOfGlitter) {
     leds[ random16(NUM_LEDS) ] += CRGB::White;
-    shortsLeds[random16(NUM_LEDS2) ] += CRGB::White;
+    bustleBag[random16(NUM_LEDS2) ] += CRGB::White;
   }
 }
 
@@ -113,19 +113,19 @@ void confetti()
 {
   // random colored speckles that blink in and fade smoothly
   fadeToBlackBy( leds, NUM_LEDS, 10);
-  fadeToBlackBy( shortsLeds, NUM_LEDS2, 10);
+  fadeToBlackBy( bustleBag, NUM_LEDS2, 10);
   int pos = random16(NUM_LEDS);
   int pos2 = random16(NUM_LEDS2);
   //leds[pos] += CHSV( gHue + random8(64), 200, 127);
   leds[pos] += ColorFromPalette( currentPalette, gHue, 63, currentBlending);
-  shortsLeds[pos2] += ColorFromPalette( currentPalette, gHue, 63, currentBlending);
+  bustleBag[pos2] += ColorFromPalette( currentPalette, gHue, 63, currentBlending);
   addGlitter(20);
   //blur1d( leds, NUM_LEDS, 25);
 }
 
 void sineOnSine(){
   fadeToBlackBy( leds, NUM_LEDS, 10);
-  fadeToBlackBy( shortsLeds, NUM_LEDS2, 7);
+  fadeToBlackBy( bustleBag, NUM_LEDS2, 7);
   int pos = beatsin16(3,0,NUM_LEDS/2);
   int pos2 = beatsin16( 40 , pos , (NUM_LEDS-pos));
   int pos3 = beatsin16(3,0,NUM_LEDS2/2);
@@ -136,44 +136,52 @@ void sineOnSine(){
     leds[i] |= CHSV(gHue+127,255,255); 
     leds[NUM_LEDS-i] |= CHSV(gHue+127,255,255);
   }
-//  for (int i = 0; i < pos3 ; i++)
-//  {
-//    shortsLeds[i] |= CHSV(gHue+127,255,255); 
-//    shortsLeds[NUM_LEDS2-i] |= CHSV(gHue+127,255,255);
-//  }
+  for (int i = 0; i < pos3 ; i++)
+  {
+    bustleBag[i] |= CHSV(gHue+127,255,255); 
+    bustleBag[NUM_LEDS2-i] |= CHSV(gHue+127,255,255);
+  }
   leds[pos2] = CHSV(gHue, 255, 255);
-//  shortsLeds[pos4] = CHSV(gHue, 255, 255);
-    int pos5 = beatsin16(12,0,NUM_LEDS2);
-  shortsLeds[pos5] += CHSV( gHue, 255, 255);
-  shortsLeds[NUM_LEDS2-pos5] += CHSV( gHue, 255, 255);
+  bustleBag[pos4] = CHSV(gHue, 255, 255);
+  int pos5 = beatsin16(12,0,NUM_LEDS2);
+  bustleBag[pos5] += CHSV( gHue, 255, 255);
+  bustleBag[NUM_LEDS2-pos5] += CHSV( gHue, 255, 255);
   blur1d( leds, NUM_LEDS, 31);
-//  blur1d( shortsLeds, NUM_LEDS2, 31);
+//  for (int j = 0; j < NUM_LEDS2 ; j++) 
+//  {
+//    bustleBag[j] = CHSV (gHue + (256*j/NUM_LEDS2) , 122 , beatsin16(50,64,255,(((65535/NUM_LEDS2)*j)/18)));
+//  }
+  blur1d( bustleBag, NUM_LEDS2, 31);
 }
 
 void doubleSinelon()  
 {
   // a colored dot sweeping back and forth, with fading trails
   fadeToBlackBy( leds, NUM_LEDS, 7);
-  fadeToBlackBy( shortsLeds, NUM_LEDS2, 7);
+  fadeToBlackBy( bustleBag, NUM_LEDS2, 7);
     int pos = beatsin16(15,0,NUM_LEDS);
-    int pos2 = beatsin16(12,0,NUM_LEDS2);
-    //int pos = beat16(13);
+  int pos2 = beatsin16(12,0,NUM_LEDS2);
+//  int pos = beat16(13);
   leds[pos] += CHSV( gHue, 255, 255);
   leds[NUM_LEDS-pos] += CHSV( gHue, 255, 255);
-  shortsLeds[pos2] += CHSV( gHue, 255, 255);
-  shortsLeds[NUM_LEDS2-pos2] += CHSV( gHue, 255, 255);
+  bustleBag[pos2] += CHSV( gHue+32, 255, 255);
+  bustleBag[NUM_LEDS2-pos2] += CHSV( gHue+32, 255, 255);
  
+//  fill_gradient( bustleBag, NUM_LEDS2, CHSV (gHue,255,255), CHSV(gHue + 128,255,255));
+
 }
 
 
 void testWave(){
   //fadeToBlackBy ( leds, NUM_LEDS, 30);
   //int amp = beatsin16(14,0,255);
-  for (int i = 0; i < NUM_LEDS ; i++) {
+  for (int i = 0; i < NUM_LEDS ; i++) 
+  {
     leds[i] = CHSV (gHue + (256*i/NUM_LEDS) , 122 , beatsin16(30,64,255,(((65535/NUM_LEDS)*i)/18)));
   }
-   for (int j = 0; j < NUM_LEDS2 ; j++) {
-    shortsLeds[j] = CHSV (gHue + (256*j/NUM_LEDS2) , 122 , beatsin16(50,64,255,(((65535/NUM_LEDS2)*j)/18)));
+  for (int j = 0; j < NUM_LEDS2 ; j++) 
+  {
+    bustleBag[j] = CHSV (gHue + (256*j/NUM_LEDS2) , 122 , beatsin16(50,64,255,(((65535/NUM_LEDS2)*j)/18)));
   }
 }
 

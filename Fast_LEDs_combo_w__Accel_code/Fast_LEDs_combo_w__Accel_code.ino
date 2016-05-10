@@ -32,12 +32,13 @@ unsigned long Interval;
 unsigned long LastUpdate;
 int activeOceanBits = 0;
 
-byte oceanBitRate[NUMBER_OF_OCEANBITS];
-uint16 oceanBitPhase[NUMBER_OF_OCEANBITS];
-byte oceanBitPhaseRate [NUMBER_OF_OCEANBITS];
-direction oceanBitDirection [NUMBER_OF_OCEANBITS];
+typedef struct OceanBit {
+  byte bitSpeed;
+  byte bitPhase;
+  bool bitActive;
+} OceanBit;
 
-
+OceanBit oceanInfo[NUMBER_OF_OCEAN_BITS];
 
 enum  direction { FORWARD, REVERSE };
 
@@ -56,8 +57,11 @@ void setup() {
   //FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
   // set master brightness control
-  FastLED.setBrightness(BRIGHTNESS);
-  
+  FastLED.setBrightness(BRIGHTNESS);  
+  for(int i=0; i < NUMBER_OF_OCEAN_BITS ; i++)
+  {
+    OceanInfo[i].bitActive = false;
+  }
 }
 typedef void (*SimplePatternList[])();
 SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm , sineOnSine , testWave, sineOnSinePrime};
@@ -139,7 +143,8 @@ void rainbowWithGlitter()
 
 void addGlitter( fract8 chanceOfGlitter) 
 {
-  if( random8() < chanceOfGlitter) {
+  if( random8() < chanceOfGlitter) 
+  {
     leds[ random16(NUM_LEDS) ] += CRGB::White;
   }
 }
@@ -157,7 +162,7 @@ void sinelon()
 {
   // a colored dot sweeping back and forth, with fading trails
   fadeToBlackBy( leds, NUM_LEDS, 10);
-    int pos = beatsin16(15,0,NUM_LEDS);
+  int pos = beatsin16(15,0,NUM_LEDS);
     //int pos = beat16(13);
   leds[pos] += CHSV( gHue, 255, 192);
   leds[NUM_LEDS-pos] += CHSV( gHue, 255, 192);
@@ -170,7 +175,8 @@ void bpm()
   uint8_t BeatsPerMinute = 62;
   CRGBPalette16 palette = PartyColors_p;
   uint8_t beat = beatsin8( BeatsPerMinute, 64, 255);
-  for( int i = 0; i < NUM_LEDS; i++) { //9948
+  for( int i = 0; i < NUM_LEDS; i++) 
+  { //9948
     leds[i] = ColorFromPalette(palette, gHue+(i*2), beat-gHue+(i*10));
   }
 }
@@ -181,19 +187,22 @@ void computed_bpm(uint8_t beat)
   //CRGBPalette16 palette = PartyColors_p;
   CRGBPalette16 palette = CloudColors_p;
   //uint8_t beat = beatsin8( BeatsPerMinute, 64, 255);
-  for( int i = 0; i < NUM_LEDS; i++) { //9948
+  for( int i = 0; i < NUM_LEDS; i++) 
+  { //9948
     leds[i] = ColorFromPalette(palette, gHue+(i*2), beat-gHue+(i*10));
   }
 }
 
-void rgb(uint8_t r, uint8_t g, uint8_t b) {
+void rgb(uint8_t r, uint8_t g, uint8_t b) 
+{
   for (int i = 0; i < NUM_LEDS; i++)
   {
     leds[i] = CRGB (r, g, b);
   }
 }
 
-void juggle() {
+void juggle() 
+{
 //  // eight colored dots, weaving in and out of sync with each other
 //  fadeToBlackBy( leds, NUM_LEDS, 20);
 //  byte dothue = 0;
@@ -242,19 +251,32 @@ void testWave(){
   }
 }
 
+
+typedef struct OceanBit {
+  byte bitSpeed;
+  byte bitPhase;
+  byte bitActive;
+} OceanBit;
+
+
 void oceanBottom()
 {
     CRGBPalette16 palette = OceanColors_p;
-   if ( activeOceanBits < NUMBER_OF_OCEAN_BITS )
+   for ( int = 0 ; i < NUMBER_OF_OCEAN_BITS ; i++)
    {
-      //create a new moving bit
-      oceanBitRate[activeOceanBits] = 1+random8(4);
-      oceanBitPhase[activeOceanBits] = random8(65536);
-      oceanBitPhaseRate[activeOceanBits] = random8(5);
-      activeOceanBits++;
+     if ( oceanInfo[i].bitActive )
+     {
+        //create a new moving bit
+        oceanInfo[i].bitSpeed = 1+random8
+        
+        oceanBitRate[activeOceanBits] = 1+random8(4);
+        oceanBitPhase[activeOceanBits] = random8(65536);
+        oceanBitPhaseRate[activeOceanBits] = random8(5);
+        activeOceanBits++;
+     }
    }
 
-   for ( int = 0; i < activeOceanBits; i++)
+   for ( int i= 0; i < activeOceanBits; i++)
    {
     if (beatsin16(oceanBitRate[i],0,NUM_LEDS) == NUM_LEDS)
     {
@@ -262,17 +284,16 @@ void oceanBottom()
     }
    }
 
-    for ( int = 0; i < NUM_LEDS; i ++)
+    for ( int i = 0; i < NUM_LEDS; i ++)
     {
       if( oceanBitDirection[i] == FORWARD)
       {
-      
-        leds[beatsin16(oceanBitRate[i],0,NUM_LEDS)] = ColorFromPalette(palette, beatsin16(6,0,255,oceanBitPhase[i]+oceanBitPhaseRate[i]*2000), 255); 
+        leds[beatsin8(oceanBitRate[i],0,NUM_LEDS)] = ColorFromPalette(palette, beatsin8(6,0,255,oceanBitPhase[i]+oceanBitPhaseRate[i]*20), 255); 
       }
     
       else
       {
-        leds[NUM_LEDS-beatsin16(oceanBitRate[i],0,NUM_LEDS)] = ColorFromPalette(palette, beatsin16(6,0,255,oceanBitPhase[i]+oceanBitPhaseRate[i]*2000), 255); 
+        leds[NUM_LEDS-beatsin8(oceanBitRate[i],0,NUM_LEDS)] = ColorFromPalette(palette, beatsin8(6,0,255,oceanBitPhase[i]+oceanBitPhaseRate[i]*20), 255); 
       }
     }
     
