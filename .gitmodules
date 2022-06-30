@@ -1,0 +1,3 @@
+[submodule "libraries/Quaternion"]
+	path = libraries/Quaternion
+	url = https://github.com/carrino/Quaternion.git
