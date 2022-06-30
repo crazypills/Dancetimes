@@ -1,187 +1,160 @@
-/*********************************************************************
- This is an example for our nRF52 based Bluefruit LE modules
+// SPDX-FileCopyrightText: 2020 Carter Nelson for Adafruit Industries
+//
+// SPDX-License-Identifier: MIT
+//
+#include <Adafruit_APDS9960.h>
+#include <Adafruit_BMP280.h>
+#include <Adafruit_LIS3MDL.h>
+#include <Adafruit_LSM6DS33.h>
+#include <Adafruit_SHT31.h>
+#include <Adafruit_Sensor.h>
+#include <PDM.h>
 
- Pick one up today in the adafruit shop!
+Adafruit_APDS9960 apds9960; // proximity, light, color, gesture
+Adafruit_BMP280 bmp280;     // temperautre, barometric pressure
+Adafruit_LIS3MDL lis3mdl;   // magnetometer
+Adafruit_LSM6DS33 lsm6ds33; // accelerometer, gyroscope
+Adafruit_SHT31 sht30;       // humidity
 
- Adafruit invests time and resources providing this open source code,
- please support Adafruit and open-source hardware by purchasing
- products from Adafruit!
+uint8_t proximity;
+uint16_t r, g, b, c;
+float temperature, pressure, altitude;
+float magnetic_x, magnetic_y, magnetic_z;
+float accel_x, accel_y, accel_z;
+float gyro_x, gyro_y, gyro_z;
+float humidity;
+int32_t mic;
 
- MIT license, check LICENSE for more information
- All text above, and the splash screen below must be included in
- any redistribution
-*********************************************************************/
+extern PDMClass PDM;
+short sampleBuffer[256];  // buffer to read samples into, each sample is 16-bits
+volatile int samplesRead; // number of samples read
 
-#include <bluefruit.h>
-
-// OTA DFU service
-BLEDfu bledfu;
-
-// Uart over BLE service
-BLEUart bleuart;
-
-// Function prototypes for packetparser.cpp
-uint8_t readPacket (BLEUart *ble_uart, uint16_t timeout);
-float   parsefloat (uint8_t *buffer);
-void    printHex   (const uint8_t * data, const uint32_t numBytes);
-
-// Packet buffer
-extern uint8_t packetbuffer[];
-
-void setup(void)
-{
+void setup(void) {
   Serial.begin(115200);
-  while ( !Serial ) delay(10);   // for nrf52840 with native usb
+  // while (!Serial) delay(10);
+  Serial.println("Feather Sense Sensor Demo");
 
-  Serial.println(F("Adafruit Bluefruit52 Controller App Example"));
-  Serial.println(F("-------------------------------------------"));
-
-  Bluefruit.begin();
-  Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
-
-  // To be consistent OTA DFU should be added first if it exists
-  bledfu.begin();
-
-  // Configure and start the BLE Uart service
-  bleuart.begin();
-
-  // Set up and start advertising
-  startAdv();
-
-  Serial.println(F("Please use Adafruit Bluefruit LE app to connect in Controller mode"));
-  Serial.println(F("Then activate/use the sensors, color picker, game controller, etc!"));
-  Serial.println();  
+  // initialize the sensors
+  apds9960.begin();
+  apds9960.enableProximity(true);
+  apds9960.enableColor(true);
+  bmp280.begin();
+  lis3mdl.begin_I2C();
+  lsm6ds33.begin_I2C();
+  sht30.begin();
+  PDM.onReceive(onPDMdata);
+  PDM.begin(1, 16000);
 }
 
-void startAdv(void)
-{
-  // Advertising packet
-  Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
-  Bluefruit.Advertising.addTxPower();
-  
-  // Include the BLE UART (AKA 'NUS') 128-bit UUID
-  Bluefruit.Advertising.addService(bleuart);
-
-  // Secondary Scan Response packet (optional)
-  // Since there is no room for 'Name' in Advertising packet
-  Bluefruit.ScanResponse.addName();
-
-  /* Start Advertising
-   * - Enable auto advertising if disconnected
-   * - Interval:  fast mode = 20 ms, slow mode = 152.5 ms
-   * - Timeout for fast mode is 30 seconds
-   * - Start(timeout) with timeout = 0 will advertise forever (until connected)
-   * 
-   * For recommended advertising interval
-   * https://developer.apple.com/library/content/qa/qa1931/_index.html   
-   */
-  Bluefruit.Advertising.restartOnDisconnect(true);
-  Bluefruit.Advertising.setInterval(32, 244);    // in unit of 0.625 ms
-  Bluefruit.Advertising.setFastTimeout(30);      // number of seconds in fast mode
-  Bluefruit.Advertising.start(0);                // 0 = Don't stop advertising after n seconds  
-}
-
-/**************************************************************************/
-/*!
-    @brief  Constantly poll for new command or response data
-*/
-/**************************************************************************/
-void loop(void)
-{
-  // Wait for new data to arrive
-  uint8_t len = readPacket(&bleuart, 500);
-  if (len == 0) return;
-
-  // Got a packet!
-  // printHex(packetbuffer, len);
-
-  // Color
-  if (packetbuffer[1] == 'C') {
-    uint8_t red = packetbuffer[2];
-    uint8_t green = packetbuffer[3];
-    uint8_t blue = packetbuffer[4];
-    Serial.print ("RGB #");
-    if (red < 0x10) Serial.print("0");
-    Serial.print(red, HEX);
-    if (green < 0x10) Serial.print("0");
-    Serial.print(green, HEX);
-    if (blue < 0x10) Serial.print("0");
-    Serial.println(blue, HEX);
+void loop(void) {
+  proximity = apds9960.readProximity();
+  while (!apds9960.colorDataReady()) {
+    delay(5);
   }
+  apds9960.getColorData(&r, &g, &b, &c);
 
-  // Buttons
-  if (packetbuffer[1] == 'B') {
-    uint8_t buttnum = packetbuffer[2] - '0';
-    boolean pressed = packetbuffer[3] - '0';
-    Serial.print ("Button "); Serial.print(buttnum);
-    if (pressed) {
-      Serial.println(" pressed");
-    } else {
-      Serial.println(" released");
+  temperature = bmp280.readTemperature();
+  pressure = bmp280.readPressure();
+  altitude = bmp280.readAltitude(1013.25);
+
+  lis3mdl.read();
+  magnetic_x = lis3mdl.x;
+  magnetic_y = lis3mdl.y;
+  magnetic_z = lis3mdl.z;
+
+  sensors_event_t accel;
+  sensors_event_t gyro;
+  sensors_event_t temp;
+  lsm6ds33.getEvent(&accel, &gyro, &temp);
+  accel_x = accel.acceleration.x;
+  accel_y = accel.acceleration.y;
+  accel_z = accel.acceleration.z;
+  gyro_x = gyro.gyro.x;
+  gyro_y = gyro.gyro.y;
+  gyro_z = gyro.gyro.z;
+
+  humidity = sht30.readHumidity();
+
+  samplesRead = 0;
+  mic = getPDMwave(4000);
+
+  Serial.println("\nFeather Sense Sensor Demo");
+  Serial.println("---------------------------------------------");
+  Serial.print("Proximity: ");
+  Serial.println(apds9960.readProximity());
+  Serial.print("Red: ");
+  Serial.print(r);
+  Serial.print(" Green: ");
+  Serial.print(g);
+  Serial.print(" Blue :");
+  Serial.print(b);
+  Serial.print(" Clear: ");
+  Serial.println(c);
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println(" C");
+  Serial.print("Barometric pressure: ");
+  Serial.println(pressure);
+  Serial.print("Altitude: ");
+  Serial.print(altitude);
+  Serial.println(" m");
+  Serial.print("Magnetic: ");
+  Serial.print(magnetic_x);
+  Serial.print(" ");
+  Serial.print(magnetic_y);
+  Serial.print(" ");
+  Serial.print(magnetic_z);
+  Serial.println(" uTesla");
+  Serial.print("Acceleration: ");
+  Serial.print(accel_x);
+  Serial.print(" ");
+  Serial.print(accel_y);
+  Serial.print(" ");
+  Serial.print(accel_z);
+  Serial.println(" m/s^2");
+  Serial.print("Gyro: ");
+  Serial.print(gyro_x);
+  Serial.print(" ");
+  Serial.print(gyro_y);
+  Serial.print(" ");
+  Serial.print(gyro_z);
+  Serial.println(" dps");
+  Serial.print("Humidity: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+  Serial.print("Mic: ");
+  Serial.println(mic);
+  delay(300);
+}
+
+/*****************************************************************/
+int32_t getPDMwave(int32_t samples) {
+  short minwave = 30000;
+  short maxwave = -30000;
+
+  while (samples > 0) {
+    if (!samplesRead) {
+      yield();
+      continue;
     }
+    for (int i = 0; i < samplesRead; i++) {
+      minwave = min(sampleBuffer[i], minwave);
+      maxwave = max(sampleBuffer[i], maxwave);
+      samples--;
+    }
+    // clear the read count
+    samplesRead = 0;
   }
+  return maxwave - minwave;
+}
 
-  // GPS Location
-  if (packetbuffer[1] == 'L') {
-    float lat, lon, alt;
-    lat = parsefloat(packetbuffer+2);
-    lon = parsefloat(packetbuffer+6);
-    alt = parsefloat(packetbuffer+10);
-    Serial.print("GPS Location\t");
-    Serial.print("Lat: "); Serial.print(lat, 4); // 4 digits of precision!
-    Serial.print('\t');
-    Serial.print("Lon: "); Serial.print(lon, 4); // 4 digits of precision!
-    Serial.print('\t');
-    Serial.print(alt, 4); Serial.println(" meters");
-  }
+void onPDMdata() {
+  // query the number of bytes available
+  int bytesAvailable = PDM.available();
 
-  // Accelerometer
-  if (packetbuffer[1] == 'A') {
-    float x, y, z;
-    x = parsefloat(packetbuffer+2);
-    y = parsefloat(packetbuffer+6);
-    z = parsefloat(packetbuffer+10);
-    Serial.print("Accel\t");
-    Serial.print(x); Serial.print('\t');
-    Serial.print(y); Serial.print('\t');
-    Serial.print(z); Serial.println();
-  }
+  // read into the sample buffer
+  PDM.read(sampleBuffer, bytesAvailable);
 
-  // Magnetometer
-  if (packetbuffer[1] == 'M') {
-    float x, y, z;
-    x = parsefloat(packetbuffer+2);
-    y = parsefloat(packetbuffer+6);
-    z = parsefloat(packetbuffer+10);
-    Serial.print("Mag\t");
-    Serial.print(x); Serial.print('\t');
-    Serial.print(y); Serial.print('\t');
-    Serial.print(z); Serial.println();
-  }
-
-  // Gyroscope
-  if (packetbuffer[1] == 'G') {
-    float x, y, z;
-    x = parsefloat(packetbuffer+2);
-    y = parsefloat(packetbuffer+6);
-    z = parsefloat(packetbuffer+10);
-    Serial.print("Gyro\t");
-    Serial.print(x); Serial.print('\t');
-    Serial.print(y); Serial.print('\t');
-    Serial.print(z); Serial.println();
-  }
-
-  // Quaternions
-  if (packetbuffer[1] == 'Q') {
-    float x, y, z, w;
-    x = parsefloat(packetbuffer+2);
-    y = parsefloat(packetbuffer+6);
-    z = parsefloat(packetbuffer+10);
-    w = parsefloat(packetbuffer+14);
-    Serial.print("Quat\t");
-    Serial.print(x); Serial.print('\t');
-    Serial.print(y); Serial.print('\t');
-    Serial.print(z); Serial.print('\t');
-    Serial.print(w); Serial.println();
-  }
+  // 16-bit, 2 bytes per sample
+  samplesRead = bytesAvailable / 2;
 }
