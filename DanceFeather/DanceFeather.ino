@@ -136,6 +136,21 @@ void loop(void) {
   delay(300);
 }
 
+// rads is always between [-pi, pi)
+float norm_rads(float angle_rad) {
+    if (angle_rad < PI) {
+        angle_rad += 2 * PI;
+    } else if (angle_rad >= PI) {
+        angle_rad -= 2 * PI;
+    }
+    if (angle_rad < PI) {
+        angle_rad += 2 * PI;
+    } else if (angle_rad >= PI) {
+        angle_rad -= 2 * PI;
+    }
+    return angle_rad;
+}
+
 void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[],
 						float mag[], float phase[], uint16_t &startIndex, uint16_t &endIndex)
 {
@@ -195,29 +210,19 @@ void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[
 		real = real / 1000 / samples;
 		imag = imag / 1000 / samples;
 		
-                float phaseRad = atan2(imag, real) + PI;
+                float phaseRad = atan2(imag, real);
 		
 		//calculating magnitude of the data by taking the square root of the
 		//sum of the squares of the real and imaginary component of each signal
                 mag[i] = log2(sqrt(real * real + imag * imag));
-		phase[i] = phaseRad;
+		phase[i] = norm_rads(phaseRad);
 	}
-}
-
-// rads is always between [0, 2 pi)
-float normalize_rads(float angle_rad) {
-    if (angle_rad < 0) {
-        angle_rad += 2 * PI;
-    } else if (angle_rad >= 2*PI) {
-        angle_rad -= 2 * PI;
-    }
-    return angle_rad;
 }
 
 float _old_phase = 0;
 uint16_t _old_max_index = 0;
 float _phase_avg = 0;
-float _phaseRateAverage = 1;
+float _phaseRateAverage = 0;
 
 void updatePhase(const float mag[], const float phases[], uint16_t startIndex, uint16_t endIndex) {
     float maxValue = -1000;
@@ -237,11 +242,11 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
     _phase_avg += _phaseRateAverage;
 
     if (maxIndex == _old_max_index && maxIndex > 0) {
-        float phaseDiff = normalize_rads(phase - _old_phase);
-        //Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
+        float phaseDiff = norm_rads(phase - _old_phase);
+        Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
 
         // Only update the rate if we are in the same fht bucket.
-        _phaseRateAverage = (((_phaseRateAverage * 9) + phaseDiff ) / 10);
+        _phaseRateAverage = _phaseRateAverage * 0.9 + phaseDiff * 0.1;
 
         if (phase + PI < _phase_avg) {
             phase += 2*PI;
@@ -249,12 +254,12 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
             phase -= 2*PI;
         }
 
-        _phase_avg = (_phase_avg * 9 + phase) / 10;
-        _phase_avg = normalize_rads(_phase_avg);
+        _phase_avg = _phase_avg * 0.9 + phase * 0.1;
+        _phase_avg = norm_rads(_phase_avg);
         //Serial.print("Phase    : "); Serial.println(phase);
-        Serial.print("Phase Avg: "); Serial.println(_phase_avg);
+        Serial.print("Phase: "); Serial.println(_phase_avg);
     }
-    _old_phase = phase;
+    _old_phase = norm_rads(phase);
     _old_max_index = maxIndex;
 }
 
