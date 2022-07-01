@@ -10,7 +10,6 @@
 #include <Adafruit_Sensor.h>
 #include <PDM.h>
 #include <KickFFT.h>
-#include <float.h>
 
 #define ACC_SIZE 64
 #define FFT_SIZE 512
@@ -205,6 +204,7 @@ void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[
 	}
 }
 
+// rads is always between [0, 2 pi)
 float normalize_rads(float angle_rad) {
     if (angle_rad < 0) {
         angle_rad += 2 * PI;
@@ -214,14 +214,14 @@ float normalize_rads(float angle_rad) {
     return angle_rad;
 }
 
-uint16_t _old_phase = 0;
+float _old_phase = 0;
 uint16_t _old_max_index = 0;
 float _phase_avg = 0;
 float _phaseRateAverage = 1;
 
-float updatePhase(float mag[], float phases[], uint16_t startIndex, uint16_t endIndex) {
-    float maxValue = -FLT_MAX;
-    int maxIndex = startIndex;
+void updatePhase(const float mag[], const float phases[], uint16_t startIndex, uint16_t endIndex) {
+    float maxValue = -1000;
+    uint16_t maxIndex = startIndex;
     for (int i = startIndex; i < endIndex; i++) {
         float val = mag[i];
         if (val > maxValue) {
@@ -229,7 +229,7 @@ float updatePhase(float mag[], float phases[], uint16_t startIndex, uint16_t end
             maxIndex = i;
         }
     }
-    Serial.print("INDEX: "); Serial.println(maxIndex);
+    //Serial.print("INDEX: "); Serial.println(maxIndex);
 
     float phase = phases[maxIndex];
 
@@ -273,8 +273,9 @@ void addToFFT(float val) {
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
   fft_phase(fs, 0, 4, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
   updatePhase(mag, phase, startIndex, endIndex);
-  float hz = fs * 2 * PI/ _phaseRateAverage;
-  Serial.print("BPM: "); Serial.println(hz * 60);
+  //float hz = fs * _phaseRateAverage / 2 / PI;
+  //Serial.print("BPM: "); Serial.println(hz * 60);
+  Serial.print("radsPerUpdate: "); Serial.println(_phaseRateAverage);
 
 
   // each sample changes the phase _phaseRateAverage rads
@@ -314,8 +315,8 @@ int32_t getPDMwave(int32_t samples) {
           float value = acc / ACC_SIZE;
           acc = 0;
           numInAcc = 0;
-          minwave = min(value, minwave);
-          maxwave = max(value, maxwave);
+          //minwave = min(value, minwave);
+          //maxwave = max(value, maxwave);
           addToFFT(value);
       }
       // minwave = min(tempBuffer[i], minwave);
