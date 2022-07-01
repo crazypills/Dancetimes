@@ -10,6 +10,7 @@
 #include <Adafruit_Sensor.h>
 #include <PDM.h>
 #include <KickFFT.h>
+#include <float.h>
 
 #define ACC_SIZE 64
 #define FFT_SIZE 512
@@ -217,7 +218,8 @@ uint16_t _old_phase = 0;
 uint16_t _old_max_index = 0;
 float _phase_avg = 0;
 float _phaseRateAverage = 1;
-void updatePhase(float mag[], float phase[], uint16_t startIndex, uint16_t endIndex) {
+
+float updatePhase(float mag[], float phases[], uint16_t startIndex, uint16_t endIndex) {
     float maxValue = -FLT_MAX;
     int maxIndex = startIndex;
     for (int i = startIndex; i < endIndex; i++) {
@@ -227,13 +229,14 @@ void updatePhase(float mag[], float phase[], uint16_t startIndex, uint16_t endIn
             maxIndex = i;
         }
     }
+    Serial.print("INDEX: "); Serial.println(maxIndex);
 
-    float phase = phase[maxIndex];
+    float phase = phases[maxIndex];
 
     // Add the rate to our phase even in the case where we don't update the rate.
     _phase_avg += _phaseRateAverage;
 
-    if (maxIndex == _old_max_index && maxIndex > 1) {
+    if (maxIndex == _old_max_index && maxIndex > 0) {
         float phaseDiff = normalize_rads(phase - _old_phase);
         //Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
 
@@ -249,7 +252,7 @@ void updatePhase(float mag[], float phase[], uint16_t startIndex, uint16_t endIn
         _phase_avg = (_phase_avg * 9 + phase) / 10;
         _phase_avg = normalize_rads(_phase_avg);
         //Serial.print("Phase    : "); Serial.println(phase);
-        //Serial.print("Phase Avg: "); Serial.println(_phase_avg);
+        Serial.print("Phase Avg: "); Serial.println(_phase_avg);
     }
     _old_phase = phase;
     _old_max_index = maxIndex;
@@ -263,26 +266,34 @@ void addToFFT(float val) {
     fftBuffer[i] = fftBuffer[i-1];
   }
   fftBuffer[0] = val;
-  float fs = 16000/ACC_SIZE; // 250 Hz
+  float fs = 16000/ACC_SIZE;
   float mag[20];
   float phase[20];
   uint16_t startIndex, endIndex;
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
-  fft_phase(fs, .5, 4, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
-  Serial.print("startIndex: ");
-  Serial.print(startIndex);
-  Serial.print("  Mag: ");
-  for (int i = startIndex; i < endIndex; i++) {
-    Serial.print(mag[i]);
-    Serial.print(" ");
-  }
-  Serial.println("");
-  Serial.print("Phase: ");
-  for (int i = startIndex; i < endIndex; i++) {
-    Serial.print(phase[i]);
-    Serial.print(" ");
-  }
-  Serial.println("");
+  fft_phase(fs, 0, 4, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
+  updatePhase(mag, phase, startIndex, endIndex);
+  float hz = fs * 2 * PI/ _phaseRateAverage;
+  Serial.print("BPM: "); Serial.println(hz * 60);
+
+
+  // each sample changes the phase _phaseRateAverage rads
+  
+ 
+  // Serial.print("startIndex: ");
+  // Serial.print(startIndex);
+  // Serial.print("  Mag: ");
+  // for (int i = startIndex; i < endIndex; i++) {
+  //   Serial.print(mag[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println("");
+  // Serial.print("Phase: ");
+  // for (int i = startIndex; i < endIndex; i++) {
+  //   Serial.print(phase[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println("");
 }
 
 /*****************************************************************/
