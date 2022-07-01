@@ -9,6 +9,10 @@
 #include <Adafruit_SHT31.h>
 #include <Adafruit_Sensor.h>
 #include <PDM.h>
+#include <KickFFT.h>
+
+#define ACC_SIZE 64
+#define FFT_SIZE 512
 
 Adafruit_APDS9960 apds9960; // proximity, light, color, gesture
 Adafruit_BMP280 bmp280;     // temperautre, barometric pressure
@@ -26,10 +30,15 @@ float humidity;
 int32_t mic;
 
 extern PDMClass PDM;
-short sampleBuffer[256];  // buffer to read samples into, each sample is 16-bits
+short tempBuffer[256];  // buffer to read samples into, each sample is 16-bits
+float acc = 0;
+float fftBuffer[FFT_SIZE];
+uint16_t numInAcc = 0;
 volatile int samplesRead; // number of samples read
 
 void setup(void) {
+  // This allows for higher precision micros().  Without dwt micros updates in increments of about 1000.
+  dwt_enable();
   Serial.begin(115200);
   // while (!Serial) delay(10);
   Serial.println("Feather Sense Sensor Demo");
@@ -127,6 +136,95 @@ void loop(void) {
   delay(300);
 }
 
+void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[],
+						uint32_t mag[], float phase[], uint16_t &startIndex, uint16_t &endIndex)
+{
+	//changes f1 and f2 to indices
+	//fs/samples gives the increments of frequency on the x-axis
+	startIndex = f1/(fs/samples);
+	endIndex = f2/(fs/samples);
+	
+	
+	for (uint16_t i = startIndex; i < endIndex; i++)
+	{
+		signed long int real = 0;
+		signed long int imag = 0;
+		
+		
+		//Euler's Identity
+		for (uint16_t j = 0; j < samples; j++)
+		{
+			//uses lookup tables for trigonometric
+			//functions to save compputing power
+			switch(samples)
+			{
+				case 512:
+					real += intcosine512[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					imag += intsine512[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					break;
+					
+				case 256:
+					real += intcosine256[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					imag += intsine256[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					break;
+					
+				case 128:
+					real += intcosine128[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					imag += intsine128[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					break;
+					
+				case 64:
+					real += intcosine64[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					imag += intsine64[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					break;
+					
+				case 32:
+					real += intcosine32[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					imag += intsine32[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+					break;
+					
+				default:
+					break;
+			}
+		}
+		
+		
+		//dividing each number by 1000 to prevent each number from getting too large
+		//Also adjusts for the fact that the trigonometric values were multiplied
+		//by 1000 as well to make them integers instead of decimal values
+		real = real/1000;
+		imag = imag/1000;
+		
+                float phaseRad = atan2(imag, real) + PI;
+		
+		//calculating magnitude of the data by taking the square root of the
+		//sum of the squares of the real and imaginary component of each signal
+		mag[i] = KickMath<signed long int>::calcMagnitude(real, imag);
+		phase[i] = phaseRad;
+	}
+}
+
+
+void addToFFT(float val) {
+  // Serial.println(val);
+  for (int i = FFT_SIZE - 1; i > 0; i--) {
+    fftBuffer[i] = fftBuffer[i-1];
+  }
+  fftBuffer[0] = val;
+  float fs = 16000/ACC_SIZE; // 250 Hz
+  uint32_t mag[FFT_SIZE];
+  float phase[FFT_SIZE];
+  uint16_t startIndex, endIndex;
+  // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
+  fft_phase(fs, .5, 4, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
+  Serial.print("FFT: ");
+  for (int i = startIndex; i < endIndex; i++) {
+    Serial.print(phase[i]);
+    Serial.print(" ");
+  }
+  Serial.println("");
+}
+
 /*****************************************************************/
 int32_t getPDMwave(int32_t samples) {
   short minwave = 30000;
@@ -138,13 +236,29 @@ int32_t getPDMwave(int32_t samples) {
       continue;
     }
     for (int i = 0; i < samplesRead; i++) {
-      minwave = min(sampleBuffer[i], minwave);
-      maxwave = max(sampleBuffer[i], maxwave);
-      samples--;
+      float newVal = tempBuffer[i];
+      acc += newVal;
+      numInAcc++;
+      if (numInAcc >= ACC_SIZE) {
+          float value = acc / ACC_SIZE;
+          acc = 0;
+          numInAcc = 0;
+          minwave = min(value, minwave);
+          maxwave = max(value, maxwave);
+          addToFFT(value);
+      }
+      // minwave = min(tempBuffer[i], minwave);
+      // maxwave = max(tempBuffer[i], maxwave);
+
+      //samples--;
     }
     // clear the read count
     samplesRead = 0;
   }
+  Serial.print("max: ");
+  Serial.println(maxwave);
+  Serial.print("min: ");
+  Serial.println(minwave);
   return maxwave - minwave;
 }
 
@@ -153,7 +267,7 @@ void onPDMdata() {
   int bytesAvailable = PDM.available();
 
   // read into the sample buffer
-  PDM.read(sampleBuffer, bytesAvailable);
+  PDM.read(tempBuffer, bytesAvailable);
 
   // 16-bit, 2 bytes per sample
   samplesRead = bytesAvailable / 2;
