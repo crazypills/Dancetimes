@@ -137,7 +137,7 @@ void loop(void) {
 }
 
 void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[],
-						uint32_t mag[], float phase[], uint16_t &startIndex, uint16_t &endIndex)
+						float mag[], float phase[], uint16_t &startIndex, uint16_t &endIndex)
 {
 	//changes f1 and f2 to indices
 	//fs/samples gives the increments of frequency on the x-axis
@@ -147,8 +147,8 @@ void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[
 	
 	for (uint16_t i = startIndex; i < endIndex; i++)
 	{
-		signed long int real = 0;
-		signed long int imag = 0;
+		float real = 0;
+		float imag = 0;
 		
 		
 		//Euler's Identity
@@ -192,14 +192,14 @@ void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[
 		//dividing each number by 1000 to prevent each number from getting too large
 		//Also adjusts for the fact that the trigonometric values were multiplied
 		//by 1000 as well to make them integers instead of decimal values
-		real = real/1000;
-		imag = imag/1000;
+		real = real / 1000 / samples;
+		imag = imag / 1000 / samples;
 		
                 float phaseRad = atan2(imag, real) + PI;
 		
 		//calculating magnitude of the data by taking the square root of the
 		//sum of the squares of the real and imaginary component of each signal
-		mag[i] = KickMath<signed long int>::calcMagnitude(real, imag);
+                mag[i] = log2(sqrt(real * real + imag * imag));
 		phase[i] = phaseRad;
 	}
 }
@@ -212,8 +212,8 @@ void addToFFT(float val) {
   }
   fftBuffer[0] = val;
   float fs = 16000/ACC_SIZE; // 250 Hz
-  uint32_t mag[FFT_SIZE];
-  float phase[FFT_SIZE];
+  float mag[20];
+  float phase[20];
   uint16_t startIndex, endIndex;
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
   fft_phase(fs, .5, 4, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
