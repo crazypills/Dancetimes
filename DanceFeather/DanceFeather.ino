@@ -204,6 +204,58 @@ void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[
 	}
 }
 
+float normalize_rads(float angle_rad) {
+    if (angle_rad < 0) {
+        angle_rad += 2 * PI;
+    } else if (angle_rad >= 2*PI) {
+        angle_rad -= 2 * PI;
+    }
+    return angle_rad;
+}
+
+uint16_t _old_phase = 0;
+uint16_t _old_max_index = 0;
+float _phase_avg = 0;
+float _phaseRateAverage = 1;
+void updatePhase(float mag[], float phase[], uint16_t startIndex, uint16_t endIndex) {
+    float maxValue = -FLT_MAX;
+    int maxIndex = startIndex;
+    for (int i = startIndex; i < endIndex; i++) {
+        float val = mag[i];
+        if (val > maxValue) {
+            maxValue = val;
+            maxIndex = i;
+        }
+    }
+
+    float phase = phase[maxIndex];
+
+    // Add the rate to our phase even in the case where we don't update the rate.
+    _phase_avg += _phaseRateAverage;
+
+    if (maxIndex == _old_max_index && maxIndex > 1) {
+        float phaseDiff = normalize_rads(phase - _old_phase);
+        //Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
+
+        // Only update the rate if we are in the same fht bucket.
+        _phaseRateAverage = (((_phaseRateAverage * 9) + phaseDiff ) / 10);
+
+        if (phase + PI < _phase_avg) {
+            phase += 2*PI;
+        } else if (phase - PI > _phase_avg) {
+            phase -= 2*PI;
+        }
+
+        _phase_avg = (_phase_avg * 9 + phase) / 10;
+        _phase_avg = normalize_rads(_phase_avg);
+        //Serial.print("Phase    : "); Serial.println(phase);
+        //Serial.print("Phase Avg: "); Serial.println(_phase_avg);
+    }
+    _old_phase = phase;
+    _old_max_index = maxIndex;
+}
+
+
 
 void addToFFT(float val) {
   // Serial.println(val);
@@ -217,7 +269,15 @@ void addToFFT(float val) {
   uint16_t startIndex, endIndex;
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
   fft_phase(fs, .5, 4, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
-  Serial.print("FFT: ");
+  Serial.print("startIndex: ");
+  Serial.print(startIndex);
+  Serial.print("  Mag: ");
+  for (int i = startIndex; i < endIndex; i++) {
+    Serial.print(mag[i]);
+    Serial.print(" ");
+  }
+  Serial.println("");
+  Serial.print("Phase: ");
   for (int i = startIndex; i < endIndex; i++) {
     Serial.print(phase[i]);
     Serial.print(" ");
