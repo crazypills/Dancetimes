@@ -228,6 +228,9 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
     float maxValue = -1000;
     uint16_t maxIndex = startIndex;
     for (int i = startIndex; i < endIndex; i++) {
+        if (i <= 1) {
+          continue;
+        }
         float val = mag[i];
         if (val > maxValue) {
             maxValue = val;
@@ -245,9 +248,20 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
     if (maxIndex == _old_max_index && maxIndex > 1) {
         float phaseDiff = norm_rads(phase - _old_phase);
 
+        // when we jump buckets, we need to be able to change beat
+        if (maxIndex > 7) {
+          phaseDiff *= 0.5;
+          if (abs(_phase_avg) > PI / 2) {
+            phase = phase * 0.5;
+          } else {
+            phase = PI + phase * 0.5;
+          }
+        }
+
         // Only update the rate if we are in the same fht bucket.
-        _phaseRateAverage = _phaseRateAverage * 0.99 + phaseDiff * 0.01;
-        Serial.print("PhaseRate: "); Serial.println(_phaseRateAverage);
+        _phaseRateAverage = _phaseRateAverage * 0.999 + phaseDiff * 0.001;
+        // Serial.print("PhaseRateAvg: "); Serial.println(_phaseRateAverage);
+        // Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
 
         if (phase + PI < _phase_avg) {
             phase += 2*PI;
@@ -285,9 +299,10 @@ void addToFFT(float val) {
   float phase[20];
   uint16_t startIndex, endIndex;
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
-  fft_phase(fs, 0, 4, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
+  fft_phase(fs, 0, 8, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
   updatePhase(mag, phase, startIndex, endIndex);
   float hz = fs * _phaseRateAverage / 2 / PI;
+  // Serial.print("endIndex: "); Serial.println(endIndex);
   // Serial.print("BPM: "); Serial.println(hz * 60);
   //Serial.print("radsPerUpdate: "); Serial.println(_phaseRateAverage);
 
@@ -295,14 +310,15 @@ void addToFFT(float val) {
   // each sample changes the phase _phaseRateAverage rads
   
  
-  // Serial.print("startIndex: ");
-  // Serial.print(startIndex);
-  // Serial.print("  Mag: ");
-  // for (int i = startIndex; i < endIndex; i++) {
-  //   Serial.print(mag[i]);
-  //   Serial.print(" ");
-  // }
-  // Serial.println("");
+  Serial.print("startIndex: ");
+  Serial.print(startIndex);
+  Serial.print("  Mag: ");
+  for (int i = startIndex; i < endIndex; i++) {
+    Serial.print(mag[i]);
+    Serial.print(" ");
+  }
+  Serial.println("");
+
   // Serial.print("Phase: ");
   // for (int i = startIndex; i < endIndex; i++) {
   //   Serial.print(phase[i]);
