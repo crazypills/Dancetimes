@@ -11,8 +11,12 @@
 #include <PDM.h>
 #include <KickFFT.h>
 
-#define ACC_SIZE 128
-#define FFT_SIZE 256
+#define ACC_SIZE 64
+#define FFT_SIZE 512
+#define HANN_SIZE 20
+#define FS (16000.0 / ACC_SIZE)
+#define F2 4.0f
+#define END_INDEX ((uint16_t) (F2 / (FS / FFT_SIZE)))
 
 #define LED_PIN 13
 
@@ -31,11 +35,18 @@ float gyro_x, gyro_y, gyro_z;
 float humidity;
 int32_t mic;
 
+float fftBuffer[FFT_SIZE]; // fft buffer holds the half rectfifed differences
+float incomingWindow[HANN_SIZE];
+float hannWindow[HANN_SIZE];
+float prevWindowedVal;
+
+// accumulate incoming values to create low pass filter
 extern PDMClass PDM;
-short tempBuffer[256];  // buffer to read samples into, each sample is 16-bits
 float acc = 0;
-float fftBuffer[FFT_SIZE];
 uint16_t numInAcc = 0;
+
+// raw values incoming from PDM
+short tempBuffer[256];  // buffer to read samples into, each sample is 16-bits
 volatile int samplesRead; // number of samples read
 
 void setup(void) {
@@ -58,6 +69,13 @@ void setup(void) {
   sht30.begin();
   PDM.onReceive(onPDMdata);
   PDM.begin(1, 16000);
+
+  // init hann window
+  for (int i = 0; i < HANN_SIZE ; i++) {
+    float sinVal = sin(PI * (i + HANN_SIZE) / (2.0f * HANN_SIZE));
+    hannWindow[i] = sinVal * sinVal;
+  }
+
 }
 
 void loop(void) {
@@ -289,20 +307,32 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
 
 
 void addToFFT(float val) {
-  // Serial.println(val);
+  val = abs(val); // rectify val
+  float windowedVal = 0;
+  for (int i = HANN_SIZE - 1; i > 0; i--) {
+    incomingWindow[i] = incomingWindow[i - 1];
+    windowedVal += incomingWindow[i] * hannWindow[i];
+  }
+  windowedVal += val;
+  incomingWindow[0] = val;
+  
   for (int i = FFT_SIZE - 1; i > 0; i--) {
     fftBuffer[i] = fftBuffer[i-1];
   }
-  fftBuffer[0] = val;
-  float fs = 16000/ACC_SIZE;
-  float mag[20];
-  float phase[20];
+
+  fftBuffer[0] = max(0, windowedVal - prevWindowedVal); // half recitify difference
+
+  prevWindowedVal = windowedVal;
+
+  float mag[END_INDEX];
+  float phase[END_INDEX];
   uint16_t startIndex, endIndex;
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
-  fft_phase(fs, 0, 4, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
+  fft_phase(FS, 0, F2, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
   updatePhase(mag, phase, startIndex, endIndex);
-  float hz = fs * _phaseRateAverage / 2 / PI;
-  // Serial.print("endIndex: "); Serial.println(endIndex);
+  float hz = FS * _phaseRateAverage / 2 / PI;
+  Serial.print("endIndex: "); Serial.println(endIndex);
+  Serial.print("END_INDEX: "); Serial.println(END_INDEX);
   // Serial.print("BPM: "); Serial.println(hz * 60);
   //Serial.print("radsPerUpdate: "); Serial.println(_phaseRateAverage);
 
