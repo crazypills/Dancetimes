@@ -13,7 +13,7 @@
 
 #define ACC_SIZE 64
 #define FFT_SIZE 512
-#define HANN_SIZE 20
+#define HANN_SIZE 40
 #define FS (16000.0 / ACC_SIZE)
 #define F2 4.0f
 #define END_INDEX ((uint16_t) (F2 / (FS / FFT_SIZE)))
@@ -69,6 +69,7 @@ void setup(void) {
   sht30.begin();
   PDM.onReceive(onPDMdata);
   PDM.begin(1, 16000);
+  PDM.setGain(5);
 
   // init hann window
   for (int i = 0; i < HANN_SIZE ; i++) {
@@ -307,7 +308,9 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
 
 
 void addToFFT(float val) {
+  // Serial.print("Val: "); Serial.println(val);
   val = abs(val); // rectify val
+  // val = val * val;
   float windowedVal = 0;
   for (int i = HANN_SIZE - 1; i > 0; i--) {
     incomingWindow[i] = incomingWindow[i - 1];
@@ -320,7 +323,9 @@ void addToFFT(float val) {
     fftBuffer[i] = fftBuffer[i-1];
   }
 
-  fftBuffer[0] = max(0, windowedVal - prevWindowedVal); // half recitify difference
+  float diff = max(0, windowedVal - prevWindowedVal);
+  fftBuffer[0] = diff;
+  Serial.print("Diff: "); Serial.println(diff);
 
   prevWindowedVal = windowedVal;
 
@@ -331,8 +336,8 @@ void addToFFT(float val) {
   fft_phase(FS, 0, F2, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
   updatePhase(mag, phase, startIndex, endIndex);
   float hz = FS * _phaseRateAverage / 2 / PI;
-  Serial.print("endIndex: "); Serial.println(endIndex);
-  Serial.print("END_INDEX: "); Serial.println(END_INDEX);
+  // Serial.print("endIndex: "); Serial.println(endIndex);
+  // Serial.print("END_INDEX: "); Serial.println(END_INDEX);
   // Serial.print("BPM: "); Serial.println(hz * 60);
   //Serial.print("radsPerUpdate: "); Serial.println(_phaseRateAverage);
 
@@ -369,18 +374,16 @@ int32_t getPDMwave(int32_t samples) {
     }
     for (int i = 0; i < samplesRead; i++) {
       float newVal = tempBuffer[i];
+      //acc += newVal * newVal;
       acc += newVal;
       numInAcc++;
       if (numInAcc >= ACC_SIZE) {
           float value = acc / ACC_SIZE;
           acc = 0;
           numInAcc = 0;
-          //minwave = min(value, minwave);
-          //maxwave = max(value, maxwave);
-          addToFFT(value);
+          addToFFT(value * value);
+          // addToFFT(value);
       }
-      // minwave = min(tempBuffer[i], minwave);
-      // maxwave = max(tempBuffer[i], maxwave);
 
       //samples--;
     }
