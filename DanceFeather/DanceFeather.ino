@@ -11,8 +11,8 @@
 #include <PDM.h>
 #include <KickFFT.h>
 
-#define ACC_SIZE 64
-#define FFT_SIZE 512
+#define ACC_SIZE 128
+#define FFT_SIZE 256
 
 #define LED_PIN 13
 
@@ -228,7 +228,7 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
     float maxValue = -1000;
     uint16_t maxIndex = startIndex;
     for (int i = startIndex; i < endIndex; i++) {
-        if (i <= 1) {
+        if (i <= 0) {
           continue;
         }
         float val = mag[i];
@@ -237,7 +237,7 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
             maxIndex = i;
         }
     }
-    Serial.print("INDEX: "); Serial.println(maxIndex);
+    // Serial.print("INDEX: "); Serial.println(maxIndex);
 
     float phase = phases[maxIndex];
 
@@ -249,7 +249,7 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
         float phaseDiff = norm_rads(phase - _old_phase);
 
         // when we jump buckets, we need to be able to change beat
-        if (maxIndex > 7) {
+        if (maxIndex > 4) {
           phaseDiff *= 0.5;
           if (abs(_phase_avg) > PI / 2) {
             phase = phase * 0.5;
@@ -259,7 +259,7 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
         }
 
         // Only update the rate if we are in the same fht bucket.
-        _phaseRateAverage = _phaseRateAverage * 0.999 + phaseDiff * 0.001;
+        _phaseRateAverage = _phaseRateAverage * 0.99 + phaseDiff * 0.01;
         // Serial.print("PhaseRateAvg: "); Serial.println(_phaseRateAverage);
         // Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
 
@@ -269,7 +269,7 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
             phase -= 2*PI;
         }
 
-        _phase_avg = _phase_avg * 0.99 + phase * 0.01;
+        _phase_avg = _phase_avg * 0.9 + phase * 0.1;
         _phase_avg = norm_rads(_phase_avg);
         // Serial.print("Phase    : "); Serial.println(phase);
         // Serial.print("Phase: "); Serial.println(_phase_avg);
@@ -299,7 +299,7 @@ void addToFFT(float val) {
   float phase[20];
   uint16_t startIndex, endIndex;
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
-  fft_phase(fs, 0, 8, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
+  fft_phase(fs, 0, 4, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
   updatePhase(mag, phase, startIndex, endIndex);
   float hz = fs * _phaseRateAverage / 2 / PI;
   // Serial.print("endIndex: "); Serial.println(endIndex);
@@ -310,8 +310,8 @@ void addToFFT(float val) {
   // each sample changes the phase _phaseRateAverage rads
   
  
-  Serial.print("startIndex: ");
-  Serial.print(startIndex);
+  // Serial.print("startIndex: ");
+  // Serial.print(startIndex);
   Serial.print("  Mag: ");
   for (int i = startIndex; i < endIndex; i++) {
     Serial.print(mag[i]);
