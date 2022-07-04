@@ -69,7 +69,7 @@ void setup(void) {
   sht30.begin();
   PDM.onReceive(onPDMdata);
   PDM.begin(1, 16000);
-  PDM.setGain(5);
+  PDM.setGain(10);
 
   // init hann window
   for (int i = 0; i < HANN_SIZE ; i++) {
@@ -238,10 +238,10 @@ void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[
 	}
 }
 
-float _old_phase = 0;
+float prevPhase[END_INDEX];
 uint16_t _old_max_index = 0;
-float _phase_avg = 0;
-float _phaseRateAverage = 0;
+float phaseAvg[END_INDEX];
+float phaseRateAverage[END_INDEX];
 
 void updatePhase(const float mag[], const float phases[], uint16_t startIndex, uint16_t endIndex) {
     float maxValue = -1000;
@@ -255,53 +255,40 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
             maxValue = val;
             maxIndex = i;
         }
-    }
-    // Serial.print("INDEX: "); Serial.println(maxIndex);
 
-    float phase = phases[maxIndex];
+        float phase = phases[i];
+        float old_phase = prevPhase[i];
+	prevPhase[i] = phase;
 
-    // Add the rate to our phase even in the case where we don't update the rate.
-    _phase_avg += _phaseRateAverage;
-    _phase_avg = norm_rads(_phase_avg);
+        // Add the rate to our phase even in the case where we don't update the rate.
+        phaseAvg[i] += phaseRateAverage[i];
+        phaseAvg[i] = norm_rads(phaseAvg[i]);
 
-    if (maxIndex == _old_max_index && maxIndex > 1) {
-        float phaseDiff = norm_rads(phase - _old_phase);
-
-        // when we jump buckets, we need to be able to change beat
-        if (maxIndex > 4) {
-          phaseDiff *= 0.5;
-          if (abs(_phase_avg) > PI / 2) {
-            phase = phase * 0.5;
-          } else {
-            phase = PI + phase * 0.5;
-          }
-        }
+        float phaseDiff = norm_rads(phase - old_phase);
 
         // Only update the rate if we are in the same fht bucket.
-        _phaseRateAverage = _phaseRateAverage * 0.99 + phaseDiff * 0.01;
-        // Serial.print("PhaseRateAvg: "); Serial.println(_phaseRateAverage);
+        phaseRateAverage[i] = phaseRateAverage[i] * 0.99 + phaseDiff * 0.01;
+        // Serial.print("PhaseRateAvg: "); Serial.println(phaseRateAverage);
         // Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
 
-        if (phase + PI < _phase_avg) {
+        if (phase + PI < phaseAvg[i]) {
             phase += 2*PI;
-        } else if (phase - PI > _phase_avg) {
+        } else if (phase - PI > phaseAvg[i]) {
             phase -= 2*PI;
         }
 
-        _phase_avg = _phase_avg * 0.9 + phase * 0.1;
-        _phase_avg = norm_rads(_phase_avg);
+        phaseAvg[i] = phaseAvg[i] * 0.9 + phase * 0.1;
+        phaseAvg[i] = norm_rads(phaseAvg[i]);
         // Serial.print("Phase    : "); Serial.println(phase);
         // Serial.print("Phase: "); Serial.println(_phase_avg);
-
     }
 
-    if (_phase_avg > 0) {
-      digitalWrite(LED_PIN, LOW);
-    } else {
-      digitalWrite(LED_PIN, HIGH);
-    }
+    //if (_phase_avg > 0) {
+    //  digitalWrite(LED_PIN, LOW);
+    //} else {
+    //  digitalWrite(LED_PIN, HIGH);
+    //}
 
-    _old_phase = phase;
     _old_max_index = maxIndex;
 }
 
@@ -325,7 +312,7 @@ void addToFFT(float val) {
 
   float diff = max(0, windowedVal - prevWindowedVal);
   fftBuffer[0] = diff;
-  Serial.print("Diff: "); Serial.println(diff);
+  // Serial.print("Diff: "); Serial.println(diff);
 
   prevWindowedVal = windowedVal;
 
@@ -335,24 +322,36 @@ void addToFFT(float val) {
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
   fft_phase(FS, 0, F2, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
   updatePhase(mag, phase, startIndex, endIndex);
-  float hz = FS * _phaseRateAverage / 2 / PI;
+
+  if (diff > 0) {
+    Serial.print("BPM:\t");
+    for (int i = 0; i < endIndex; i++) {
+      float hz = FS * phaseRateAverage[i] / 2 / PI;
+      float bpm = hz * 60;
+      Serial.print(bpm);
+      Serial.print("\t");
+    }
+    Serial.println("");
+  }
+
+  // float hz = FS * phaseRateAverage / 2 / PI;
   // Serial.print("endIndex: "); Serial.println(endIndex);
   // Serial.print("END_INDEX: "); Serial.println(END_INDEX);
   // Serial.print("BPM: "); Serial.println(hz * 60);
-  //Serial.print("radsPerUpdate: "); Serial.println(_phaseRateAverage);
+  //Serial.print("radsPerUpdate: "); Serial.println(phaseRateAverage);
 
 
-  // each sample changes the phase _phaseRateAverage rads
+  // each sample changes the phase phaseRateAverage rads
   
  
   // Serial.print("startIndex: ");
   // Serial.print(startIndex);
-  Serial.print("  Mag: ");
-  for (int i = startIndex; i < endIndex; i++) {
-    Serial.print(mag[i]);
-    Serial.print(" ");
-  }
-  Serial.println("");
+  // Serial.print("  Mag: ");
+  // for (int i = startIndex; i < endIndex; i++) {
+  //   Serial.print(mag[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println("");
 
   // Serial.print("Phase: ");
   // for (int i = startIndex; i < endIndex; i++) {
