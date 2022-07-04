@@ -15,7 +15,7 @@
 #define FFT_SIZE 512
 #define HANN_SIZE 40
 #define FS (16000.0 / ACC_SIZE)
-#define F2 4.0f
+#define F2 3.5f
 #define END_INDEX ((uint16_t) (F2 / (FS / FFT_SIZE)))
 
 #define LED_PIN 13
@@ -231,9 +231,8 @@ void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[
 		
                 float phaseRad = atan2(imag, real);
 		
-		//calculating magnitude of the data by taking the square root of the
-		//sum of the squares of the real and imaginary component of each signal
-                mag[i] = log2(sqrt(real * real + imag * imag));
+                // mag[i] = log2(sqrt(real * real + imag * imag));
+                mag[i] = sqrt(real * real + imag * imag);
 		phase[i] = phaseRad;
 	}
 }
@@ -242,17 +241,20 @@ float prevPhase[END_INDEX];
 uint16_t _old_max_index = 0;
 float phaseAvg[END_INDEX];
 float phaseRateAverage[END_INDEX];
+float magAvg[END_INDEX];
 
-void updatePhase(const float mag[], const float phases[], uint16_t startIndex, uint16_t endIndex) {
-    float maxValue = -1000;
+bool updatePhase(const float mag[], const float phases[], uint16_t startIndex, uint16_t endIndex) {
+    float maxMag = -1000;
     uint16_t maxIndex = startIndex;
+    bool ret = false;
     for (int i = startIndex; i < endIndex; i++) {
         if (i <= 0) {
           continue;
         }
-        float val = mag[i];
-        if (val > maxValue) {
-            maxValue = val;
+        float magnitude = mag[i];
+        magAvg[i] = magAvg[i] * 0.99 + magnitude * 0.01;
+        if (magnitude > maxMag) {
+            maxMag = magnitude;
             maxIndex = i;
         }
 
@@ -266,8 +268,7 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
 
         float phaseDiff = norm_rads(phase - old_phase);
 
-        // Only update the rate if we are in the same fht bucket.
-        phaseRateAverage[i] = phaseRateAverage[i] * 0.99 + phaseDiff * 0.01;
+        phaseRateAverage[i] = phaseRateAverage[i] * 0.98 + phaseDiff * 0.02;
         // Serial.print("PhaseRateAvg: "); Serial.println(phaseRateAverage);
         // Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
 
@@ -277,10 +278,13 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
             phase -= 2*PI;
         }
 
-        phaseAvg[i] = phaseAvg[i] * 0.9 + phase * 0.1;
+        phaseAvg[i] = phaseAvg[i] * 0.99 + phase * 0.01;
         phaseAvg[i] = norm_rads(phaseAvg[i]);
         // Serial.print("Phase    : "); Serial.println(phase);
         // Serial.print("Phase: "); Serial.println(_phase_avg);
+        if (2 <= i && i <= 4 && abs(phaseAvg[i]) < 0.1) {
+          ret = true;
+        }
     }
 
     //if (_phase_avg > 0) {
@@ -290,6 +294,7 @@ void updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
     //}
 
     _old_max_index = maxIndex;
+    return ret;
 }
 
 
@@ -321,17 +326,34 @@ void addToFFT(float val) {
   uint16_t startIndex, endIndex;
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
   fft_phase(FS, 0, F2, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
-  updatePhase(mag, phase, startIndex, endIndex);
+  bool phaseNearZero = updatePhase(mag, phase, startIndex, endIndex);
+  if (diff > 0 && phaseNearZero) {
 
-  if (diff > 0) {
-    Serial.print("BPM:\t");
-    for (int i = 0; i < endIndex; i++) {
-      float hz = FS * phaseRateAverage[i] / 2 / PI;
-      float bpm = hz * 60;
-      Serial.print(bpm);
-      Serial.print("\t");
-    }
-    Serial.println("");
+  // Serial.print("BPM:\t");
+  // for (int i = 0; i < endIndex; i++) {
+  //   float hz = FS * phaseRateAverage[i] / 2 / PI;
+  //   float bpm = hz * 60;
+  //   Serial.print(bpm);
+  //   Serial.print("\t");
+  // }
+  // Serial.println("");
+
+  // Serial.print("Phase:\t");
+  // for (int i = 0; i < endIndex; i++) {
+  //   float phase = phaseAvg[i];
+  //   Serial.print(phase);
+  //   Serial.print("\t");
+  // }
+  // Serial.println("");
+
+  Serial.print("Magnitude:\t");
+  for (int i = 0; i < endIndex; i++) {
+    float mag = magAvg[i];
+    Serial.print(mag);
+    Serial.print("\t");
+  }
+  Serial.println("");
+
   }
 
   // float hz = FS * phaseRateAverage / 2 / PI;
@@ -380,7 +402,7 @@ int32_t getPDMwave(int32_t samples) {
           float value = acc / ACC_SIZE;
           acc = 0;
           numInAcc = 0;
-          addToFFT(value * value);
+          addToFFT(value);
           // addToFFT(value);
       }
 
