@@ -11,9 +11,14 @@
 #include <PDM.h>
 #include <KickFFT.h>
 
-#define ACC_SIZE 64
-#define FFT_SIZE 512
-#define HANN_SIZE 60
+// works but slow
+//#define ACC_SIZE 64
+//#define FFT_SIZE 512
+//#define HANN_SIZE 60
+
+#define ACC_SIZE 128
+#define FFT_SIZE 256
+#define HANN_SIZE 30
 #define FS (16000.0 / ACC_SIZE)
 #define F2 3.5f
 #define END_INDEX ((uint16_t) (F2 / (FS / FFT_SIZE)))
@@ -243,14 +248,11 @@ float phaseAvg[END_INDEX];
 float phaseRateAverage[END_INDEX];
 float magAvg[END_INDEX];
 
-bool updatePhase(const float mag[], const float phases[], uint16_t startIndex, uint16_t endIndex) {
+float updatePhase(const float mag[], const float phases[], uint16_t startIndex, uint16_t endIndex) {
     float maxMag = -1000;
     uint16_t maxIndex = startIndex;
-    bool ret = false;
+    bool ret = 0;
     for (int i = startIndex; i < endIndex; i++) {
-        if (i <= 0) {
-          continue;
-        }
         float magnitude = mag[i];
         magAvg[i] = magAvg[i] * 0.99 + magnitude * 0.01;
         if (magAvg[i] > maxMag && i > 0) {
@@ -282,18 +284,15 @@ bool updatePhase(const float mag[], const float phases[], uint16_t startIndex, u
         phaseAvg[i] = norm_rads(phaseAvg[i]);
         // Serial.print("Phase    : "); Serial.println(phase);
         // Serial.print("Phase: "); Serial.println(_phase_avg);
-        if (i == winningIndex && abs(phaseAvg[i]) < 0.1) {
-          ret = true;
-        }
     }
 
+    winningIndex = maxIndex;
     //if (_phase_avg > 0) {
     //  digitalWrite(LED_PIN, LOW);
     //} else {
     //  digitalWrite(LED_PIN, HIGH);
     //}
 
-    winningIndex = maxIndex;
     return ret;
 }
 
@@ -326,10 +325,18 @@ void addToFFT(float val) {
   uint16_t startIndex, endIndex;
   // KickFFT<int32_t>::fft(fs, 0, 4, FFT_SIZE, fftBuffer, mag, startIndex, endIndex);
   fft_phase(FS, 0, F2, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
-  bool phaseNearZero = updatePhase(mag, phase, startIndex, endIndex);
-  if (diff > 0 && !phaseNearZero) {
+  updatePhase(mag, phase, startIndex, endIndex);
+  bool phaseNearZero = false;
+  for (int i = startIndex; i < endIndex; i++) {
+      if (i == winningIndex && abs(phaseAvg[i]) < 0.1) {
+        phaseNearZero = true;
+      }
+  }
+
+  if (diff > magAvg[0]) {
     digitalWrite(LED_PIN, LOW);
 
+    Serial.print("Diff:\t"); Serial.println(diff);
     Serial.print("Phase:\t");
     for (int i = 0; i < endIndex; i++) {
       float phase = phaseAvg[i];
@@ -338,7 +345,10 @@ void addToFFT(float val) {
     }
     Serial.println("");
 
-  } else if (diff > 0 && phaseNearZero) {
+  }
+
+  if (diff > magAvg[0] && phaseNearZero) {
+    Serial.print("Diff:\t"); Serial.println(diff);
     digitalWrite(LED_PIN, HIGH);
 
     Serial.print("BPM:\t");
@@ -350,7 +360,7 @@ void addToFFT(float val) {
     }
     Serial.println("");
 
-    Serial.print("Magnitude:\t");
+    Serial.print("Mag:\t");
     for (int i = 0; i < endIndex; i++) {
       float mag = magAvg[i];
       Serial.print(mag);
@@ -400,6 +410,7 @@ int32_t getPDMwave(int32_t samples) {
       yield();
       continue;
     }
+    uint32_t start = micros();
     for (int i = 0; i < samplesRead; i++) {
       float newVal = tempBuffer[i];
       //acc += newVal * newVal;
@@ -416,6 +427,10 @@ int32_t getPDMwave(int32_t samples) {
       //samples--;
     }
     // clear the read count
+    uint32_t duration = micros() - start;
+    //Serial.print("micros: "); Serial.println(duration);
+    //Serial.print("samples: "); Serial.println(samplesRead);
+
     samplesRead = 0;
   }
   Serial.print("max: ");
