@@ -331,12 +331,12 @@ void addToFFT(float val) {
   updatePhase(mag, phase, startIndex, endIndex);
   bool phaseNearZero = false;
   for (int i = startIndex; i < endIndex; i++) {
-      if (i == winningIndex && abs(phaseAvg[i]) < 0.1) {
+      if (i == winningIndex && abs(phaseAvg[i]) < 0.05f * i) {
         phaseNearZero = true;
       }
   }
 
-  if (diff > magAvg[0]) {
+  if (diff > 2 * magAvg[0]) {
     digitalWrite(LED_PIN, LOW);
 
     Serial.print("Diff:\t"); Serial.println(diff);
