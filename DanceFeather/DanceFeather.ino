@@ -20,7 +20,7 @@
 #define ACC_SIZE 2 // reduce sample rate before doing fft for performance reasons
 #define FFT_SIZE 256
 #define HANN_SIZE 40
-#define FS (16000.0 / ACC_SIZE)
+#define FS (16000.0 / ACC_SIZE / LOW_PASS_SIZE)
 #define F2 3.5f
 #define END_INDEX ((uint16_t) (F2 / (FS / FFT_SIZE)))
 
@@ -418,7 +418,7 @@ int32_t getPDMwave(int32_t samples) {
       float newVal = tempBuffer[i];
       lowPass += newVal;
       if (++numInLowPass >= LOW_PASS_SIZE) {
-        acc += lowPass * lowPass;
+        acc += abs(lowPass);
         numInAcc++;
         numInLowPass = 0;
         lowPass = 0;
