@@ -258,7 +258,7 @@ float updatePhase(const float mag[], const float phases[], uint16_t startIndex, 
     for (int i = startIndex; i < endIndex; i++) {
         float magnitude = mag[i];
         magAvg[i] = magAvg[i] * 0.99 + magnitude * 0.01;
-        if (magAvg[i] > maxMag && i > 0) {
+        if (magAvg[i] > maxMag && i > 1) {
             maxMag = magAvg[i];
             maxIndex = i;
         }
@@ -350,8 +350,7 @@ void addToFFT(float val) {
 
   }
 
-  if (diff > magAvg[0] && phaseNearZero) {
-    Serial.print("Diff:\t"); Serial.println(diff);
+  if (diff > 2 * magAvg[0] && phaseNearZero) {
     digitalWrite(LED_PIN, HIGH);
 
     Serial.print("BPM:\t");
