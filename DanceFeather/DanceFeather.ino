@@ -16,9 +16,10 @@
 //#define FFT_SIZE 512
 //#define HANN_SIZE 60
 
-#define ACC_SIZE 128
+#define LOW_PASS_SIZE 64 // 250Hz sample freq, this means signals above 125Hz are filtered
+#define ACC_SIZE 2 // reduce sample rate before doing fft for performance reasons
 #define FFT_SIZE 256
-#define HANN_SIZE 30
+#define HANN_SIZE 40
 #define FS (16000.0 / ACC_SIZE)
 #define F2 3.5f
 #define END_INDEX ((uint16_t) (F2 / (FS / FFT_SIZE)))
@@ -47,6 +48,8 @@ float prevWindowedVal;
 
 // accumulate incoming values to create low pass filter
 extern PDMClass PDM;
+float lowPass = 0;
+uint16_t numInLowPass = 0;
 float acc = 0;
 uint16_t numInAcc = 0;
 
@@ -413,21 +416,24 @@ int32_t getPDMwave(int32_t samples) {
     uint32_t start = micros();
     for (int i = 0; i < samplesRead; i++) {
       float newVal = tempBuffer[i];
-      //acc += newVal * newVal;
-      acc += newVal;
-      numInAcc++;
+      lowPass += newVal;
+      if (++numInLowPass >= LOW_PASS_SIZE) {
+        acc += lowPass * lowPass;
+        numInAcc++;
+        numInLowPass = 0;
+        lowPass = 0;
+      }
+
       if (numInAcc >= ACC_SIZE) {
-          float value = acc / ACC_SIZE;
+          addToFFT(acc);
           acc = 0;
           numInAcc = 0;
-          addToFFT(value);
-          // addToFFT(value);
       }
 
       //samples--;
     }
     // clear the read count
-    uint32_t duration = micros() - start;
+    //uint32_t duration = micros() - start;
     //Serial.print("micros: "); Serial.println(duration);
     //Serial.print("samples: "); Serial.println(samplesRead);
 
@@ -441,6 +447,10 @@ int32_t getPDMwave(int32_t samples) {
 }
 
 void onPDMdata() {
+  if (samplesRead) {
+    Serial.println("PDM data did not get processed");
+  }
+
   // query the number of bytes available
   int bytesAvailable = PDM.available();
 
