@@ -258,7 +258,7 @@ float updatePhase(const float mag[], const float phases[], uint16_t startIndex, 
     bool ret = 0;
     for (int i = startIndex; i < endIndex; i++) {
         float magnitude = mag[i];
-        magAvg[i] = magAvg[i] * 0.99 + magnitude * 0.01;
+        magAvg[i] = magAvg[i] * 0.9 + magnitude * 0.1;
         if (magAvg[i] > maxMag && i > 1 && i < 7) {
             maxMag = magAvg[i];
             maxIndex = i;
