@@ -21,7 +21,8 @@
 #define FFT_SIZE 256
 #define HANN_SIZE 40
 #define FS (16000.0 / ACC_SIZE / LOW_PASS_SIZE)
-#define F2 3.5f
+//#define F2 3.5f
+#define F2 6.8f
 #define END_INDEX ((uint16_t) (F2 / (FS / FFT_SIZE)))
 
 #define LED_PIN 13
@@ -258,7 +259,7 @@ float updatePhase(const float mag[], const float phases[], uint16_t startIndex, 
     for (int i = startIndex; i < endIndex; i++) {
         float magnitude = mag[i];
         magAvg[i] = magAvg[i] * 0.99 + magnitude * 0.01;
-        if (magAvg[i] > maxMag && i > 1) {
+        if (magAvg[i] > maxMag && i > 1 && i < 7) {
             maxMag = magAvg[i];
             maxIndex = i;
         }
@@ -339,7 +340,15 @@ void addToFFT(float val) {
   if (diff > 2 * magAvg[0]) {
     digitalWrite(LED_PIN, LOW);
 
-    Serial.print("Diff:\t"); Serial.println(diff);
+    Serial.print("Prev :\t");
+    for (int i = 0; i < endIndex; i++) {
+      float phase = prevPhase[i];
+      Serial.print(phase);
+      Serial.print("\t");
+    }
+    Serial.println("");
+
+    // Serial.print("Diff:\t"); Serial.println(diff);
     Serial.print("Phase:\t");
     for (int i = 0; i < endIndex; i++) {
       float phase = phaseAvg[i];
@@ -347,11 +356,6 @@ void addToFFT(float val) {
       Serial.print("\t");
     }
     Serial.println("");
-
-  }
-
-  if (diff > 2 * magAvg[0] && phaseNearZero) {
-    digitalWrite(LED_PIN, HIGH);
 
     Serial.print("BPM:\t");
     for (int i = 0; i < endIndex; i++) {
@@ -370,6 +374,11 @@ void addToFFT(float val) {
     }
     Serial.println("");
 
+  }
+
+  if (diff > 1 * magAvg[0] && phaseNearZero) {
+    Serial.println("BEAT!");
+    digitalWrite(LED_PIN, HIGH);
   } else {
     digitalWrite(LED_PIN, LOW);
   }
@@ -417,14 +426,15 @@ int32_t getPDMwave(int32_t samples) {
       float newVal = tempBuffer[i];
       lowPass += newVal;
       if (++numInLowPass >= LOW_PASS_SIZE) {
-        acc += abs(lowPass);
-        numInAcc++;
-        numInLowPass = 0;
+        lowPass /= LOW_PASS_SIZE;
+        acc += lowPass * lowPass;
         lowPass = 0;
+        numInLowPass = 0;
+        numInAcc++;
       }
 
       if (numInAcc >= ACC_SIZE) {
-          addToFFT(acc);
+          addToFFT(acc / 2048);
           acc = 0;
           numInAcc = 0;
       }
