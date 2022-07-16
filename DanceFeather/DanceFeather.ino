@@ -259,6 +259,8 @@ float updatePhase(const float mag[], const float phases[], uint16_t startIndex, 
     for (int i = startIndex; i < endIndex; i++) {
         float magnitude = mag[i];
         magAvg[i] = magAvg[i] * 0.9 + magnitude * 0.1;
+        // We look for the beat in 2-7, we can also check i*2 to verify
+        // usually the overtones are synced up as well
         if (magAvg[i] > maxMag && i > 1 && i < 7) {
             maxMag = magAvg[i];
             maxIndex = i;
@@ -274,7 +276,12 @@ float updatePhase(const float mag[], const float phases[], uint16_t startIndex, 
 
         float phaseDiff = norm_rads(phase - old_phase);
 
-        phaseRateAverage[i] = phaseRateAverage[i] * 0.98 + phaseDiff * 0.02;
+        if (winningIndex == i) {
+          phaseRateAverage[i] = phaseRateAverage[i] * 0.98 + phaseDiff * 0.02;
+        } else {
+          phaseRateAverage[i] = phaseRateAverage[i] * 0.9 + phaseDiff * 0.1;
+        }
+
         // Serial.print("PhaseRateAvg: "); Serial.println(phaseRateAverage);
         // Serial.print("PhaseDiff: "); Serial.println(phaseDiff);
 
@@ -284,7 +291,12 @@ float updatePhase(const float mag[], const float phases[], uint16_t startIndex, 
             phase -= 2*PI;
         }
 
-        phaseAvg[i] = phaseAvg[i] * 0.99 + phase * 0.01;
+        if (winningIndex == i) {
+          phaseAvg[i] = phaseAvg[i] * 0.99 + phase * 0.01;
+        } else {
+          // aggressively converge for losers
+          phaseAvg[i] = phaseAvg[i] * 0.9 + phase * 0.1;
+        }
         phaseAvg[i] = norm_rads(phaseAvg[i]);
         // Serial.print("Phase    : "); Serial.println(phase);
         // Serial.print("Phase: "); Serial.println(_phase_avg);
