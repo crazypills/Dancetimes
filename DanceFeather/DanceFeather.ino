@@ -350,48 +350,49 @@ void addToFFT(float val) {
   fft_phase(FS, 0, F2, FFT_SIZE, fftBuffer, mag, phase, startIndex, endIndex);
   updatePhase(mag, phase, startIndex, endIndex);
   bool phaseNearZero = false;
-  for (int i = startIndex; i < endIndex; i++) {
-      if (i == winningIndex && abs(phaseAvg[i]) < 0.05f * i) {
-        phaseNearZero = true;
-      }
+  float winningPhase = phaseAvg[winningIndex];
+  if (abs(winningPhase) < 0.05f * winningIndex) {
+    phaseNearZero = true;
   }
 
   if (diff > 2 * magAvg[0]) {
     digitalWrite(LED_PIN, LOW);
 
-    Serial.print("Prev :\t");
-    for (int i = 0; i < endIndex; i++) {
-      float phase = prevPhase[i];
-      Serial.print(phase);
-      Serial.print("\t");
-    }
-    Serial.println("");
+    Serial.print("Phase: "); Serial.println(winningPhase);
 
-    // Serial.print("Diff:\t"); Serial.println(diff);
-    Serial.print("Phase:\t");
-    for (int i = 0; i < endIndex; i++) {
-      float phase = phaseAvg[i];
-      Serial.print(phase);
-      Serial.print("\t");
-    }
-    Serial.println("");
+    // Serial.print("Prev :\t");
+    // for (int i = 0; i < endIndex; i++) {
+    //   float phase = prevPhase[i];
+    //   Serial.print(phase);
+    //   Serial.print("\t");
+    // }
+    // Serial.println("");
 
-    Serial.print("BPM:\t");
-    for (int i = 0; i < endIndex; i++) {
-      float hz = FS * phaseRateAverage[i] / 2 / PI;
-      float bpm = hz * 60;
-      Serial.print(bpm);
-      Serial.print("\t");
-    }
-    Serial.println("");
+    // // Serial.print("Diff:\t"); Serial.println(diff);
+    // Serial.print("Phase:\t");
+    // for (int i = 0; i < endIndex; i++) {
+    //   float phase = phaseAvg[i];
+    //   Serial.print(phase);
+    //   Serial.print("\t");
+    // }
+    // Serial.println("");
 
-    Serial.print("Mag:\t");
-    for (int i = 0; i < endIndex; i++) {
-      float mag = magAvg[i];
-      Serial.print(mag);
-      Serial.print("\t");
-    }
-    Serial.println("");
+    // Serial.print("BPM:\t");
+    // for (int i = 0; i < endIndex; i++) {
+    //   float hz = FS * phaseRateAverage[i] / 2 / PI;
+    //   float bpm = hz * 60;
+    //   Serial.print(bpm);
+    //   Serial.print("\t");
+    // }
+    // Serial.println("");
+
+    // Serial.print("Mag:\t");
+    // for (int i = 0; i < endIndex; i++) {
+    //   float mag = magAvg[i];
+    //   Serial.print(mag);
+    //   Serial.print("\t");
+    // }
+    // Serial.println("");
 
   }
 
