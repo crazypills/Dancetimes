@@ -180,70 +180,70 @@ float norm_rads(float angle_rad) {
 }
 
 void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[],
-						float mag[], float phase[], uint16_t &startIndex, uint16_t &endIndex)
+                                                float mag[], float phase[], uint16_t &startIndex, uint16_t &endIndex)
 {
-	//changes f1 and f2 to indices
-	//fs/samples gives the increments of frequency on the x-axis
-	startIndex = f1/(fs/samples);
-	endIndex = f2/(fs/samples);
-	
-	
-	for (uint16_t i = startIndex; i < endIndex; i++)
-	{
-		float real = 0;
-		float imag = 0;
-		
-		
-		//Euler's Identity
-		for (uint16_t j = 0; j < samples; j++)
-		{
-			//uses lookup tables for trigonometric
-			//functions to save compputing power
-			switch(samples)
-			{
-				case 512:
-					real += intcosine512[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					imag += intsine512[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					break;
-					
-				case 256:
-					real += intcosine256[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					imag += intsine256[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					break;
-					
-				case 128:
-					real += intcosine128[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					imag += intsine128[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					break;
-					
-				case 64:
-					real += intcosine64[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					imag += intsine64[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					break;
-					
-				case 32:
-					real += intcosine32[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					imag += intsine32[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
-					break;
-					
-				default:
-					break;
-			}
-		}
-		
-		
-		//dividing each number by 1000 to prevent each number from getting too large
-		//Also adjusts for the fact that the trigonometric values were multiplied
-		//by 1000 as well to make them integers instead of decimal values
-		real = real / 1000 / samples;
-		imag = imag / 1000 / samples;
-		
+        //changes f1 and f2 to indices
+        //fs/samples gives the increments of frequency on the x-axis
+        startIndex = f1/(fs/samples);
+        endIndex = f2/(fs/samples);
+        
+        
+        for (uint16_t i = startIndex; i < endIndex; i++)
+        {
+                float real = 0;
+                float imag = 0;
+                
+                
+                //Euler's Identity
+                for (uint16_t j = 0; j < samples; j++)
+                {
+                        //uses lookup tables for trigonometric
+                        //functions to save compputing power
+                        switch(samples)
+                        {
+                                case 512:
+                                        real += intcosine512[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        imag += intsine512[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        break;
+                                        
+                                case 256:
+                                        real += intcosine256[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        imag += intsine256[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        break;
+                                        
+                                case 128:
+                                        real += intcosine128[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        imag += intsine128[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        break;
+                                        
+                                case 64:
+                                        real += intcosine64[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        imag += intsine64[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        break;
+                                        
+                                case 32:
+                                        real += intcosine32[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        imag += intsine32[ (i*j) - (samples*((i*j)/samples)) ] * data[j];
+                                        break;
+                                        
+                                default:
+                                        break;
+                        }
+                }
+                
+                
+                //dividing each number by 1000 to prevent each number from getting too large
+                //Also adjusts for the fact that the trigonometric values were multiplied
+                //by 1000 as well to make them integers instead of decimal values
+                real = real / 1000 / samples;
+                imag = imag / 1000 / samples;
+                
                 float phaseRad = atan2(imag, real);
-		
+                
                 // mag[i] = log2(sqrt(real * real + imag * imag));
                 mag[i] = sqrt(real * real + imag * imag);
-		phase[i] = phaseRad;
-	}
+                phase[i] = phaseRad;
+        }
 }
 
 float prevPhase[END_INDEX];
@@ -268,7 +268,7 @@ float updatePhase(const float mag[], const float phases[], uint16_t startIndex, 
 
         float phase = phases[i];
         float old_phase = prevPhase[i];
-	prevPhase[i] = phase;
+        prevPhase[i] = phase;
 
         // Add the rate to our phase even in the case where we don't update the rate.
         phaseAvg[i] += phaseRateAverage[i];
