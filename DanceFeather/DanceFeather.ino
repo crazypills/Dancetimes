@@ -188,8 +188,11 @@ void fft_phase(float fs, float f1, float f2, uint16_t samples, const float data[
         endIndex = f2/(fs/samples);
         
         
-        for (uint16_t i = startIndex; i < endIndex; i++)
-        {
+        for (uint16_t i = startIndex; i < endIndex; i++) {
+            if (i > endIndex / 2 && i % 2 == 1) {
+                continue;
+            }
+
                 float real = 0;
                 float imag = 0;
                 
@@ -257,6 +260,10 @@ float updatePhase(const float mag[], const float phases[], uint16_t startIndex, 
     uint16_t maxIndex = startIndex;
     bool ret = 0;
     for (int i = startIndex; i < endIndex; i++) {
+        if (i > endIndex / 2 && i & 1) {
+            continue;
+        }
+
         float magnitude = mag[i];
         magAvg[i] = magAvg[i] * 0.9 + magnitude * 0.1;
         // We look for the beat in 2-7, we can also check i*2 to verify
